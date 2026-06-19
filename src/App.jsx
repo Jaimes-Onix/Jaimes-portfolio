@@ -11,8 +11,8 @@ const FLAGSHIP = {
   desc: 'AI-powered consumer drone — a product site plus a matching pitch deck, both built on one shared design system.',
   tags: ['Design System', 'Claude Code', 'Vercel'],
   href: SKYLINE_URL,
-  img: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1400&q=80&auto=format&fit=crop',
-  alt: 'Aerial coastline shot from a drone',
+  img: 'work-01-skyline',
+  alt: 'Skyline Aerial site hero — “See your world from above.”',
 }
 
 const WORK = [
@@ -22,8 +22,8 @@ const WORK = [
     desc: 'Marketing landing with a working contact form — submissions to Supabase, email delivery via Resend.',
     tags: ['React', 'Supabase', 'Resend'],
     href: BRAND_URL,
-    img: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=1200&q=80&auto=format&fit=crop',
-    alt: 'Website open on a laptop',
+    img: 'work-02-brand',
+    alt: 'Tester.io brand landing page hero',
   },
   {
     num: '03',
@@ -31,8 +31,9 @@ const WORK = [
     desc: 'Product page with a video hero and 3D scroll motion that reveals the build as you move down.',
     tags: ['3D', 'Motion', 'React'],
     href: BRAND_URL,
-    img: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&q=80&auto=format&fit=crop',
-    alt: 'Abstract 3D rendered shapes',
+    img: 'work-03-product',
+    alt: 'Tester smartwatch product render',
+    liveLabel: null,
   },
   {
     num: '04',
@@ -40,8 +41,9 @@ const WORK = [
     desc: 'Internal dashboard reading and writing against the live backend, with authenticated access.',
     tags: ['Dashboard', 'Supabase', 'Auth'],
     href: null,
-    img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80&auto=format&fit=crop',
-    alt: 'Analytics dashboard on a screen',
+    img: 'work-04-dashboard',
+    alt: 'Admin dashboard overview with submissions and metrics',
+    liveLabel: 'Authenticated — private',
   },
   {
     num: '05',
@@ -49,10 +51,21 @@ const WORK = [
     desc: 'An n8n automation that generates and sends a daily briefing email — set once, runs itself.',
     tags: ['n8n', 'Automation', 'AIGC'],
     href: null,
-    img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80&auto=format&fit=crop',
-    alt: 'Laptop with morning coffee',
+    img: 'work-05-briefing',
+    alt: 'Morning Briefing automated email',
+    liveLabel: 'Runs on a schedule',
   },
 ]
+
+/* WebP with JPG fallback. */
+function Shot({ name, alt }) {
+  return (
+    <picture>
+      <source srcSet={`/images/${name}.webp`} type="image/webp" />
+      <img src={`/images/${name}.jpg`} alt={alt} loading="lazy" />
+    </picture>
+  )
+}
 
 const SKILLS = [
   { cat: 'Frontend', items: 'React · UI build · Vite · Tailwind' },
@@ -82,7 +95,7 @@ const EXPERIENCE = [
 ]
 
 /* "View live ↗" link, or a muted label when the tile has no public URL. */
-function ViewLive({ href }) {
+function ViewLive({ href, label }) {
   if (href) {
     return (
       <a
@@ -95,7 +108,9 @@ function ViewLive({ href }) {
       </a>
     )
   }
-  return <span className="card__live card__live--muted">Private build</span>
+  return (
+    <span className="card__live card__live--muted">{label || 'Private build'}</span>
+  )
 }
 
 export default function App() {
@@ -290,6 +305,26 @@ export default function App() {
             <p className="eyebrow">Five builds · 2025–2026</p>
           </div>
 
+          {/* Reel — autoplay loop of the live builds; poster shown if reduced-motion */}
+          <div className="reel">
+            <video
+              className="reel__video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="/images/work-01-skyline.jpg"
+            >
+              <source src="/videos/reel.webm" type="video/webm" />
+              <source src="/videos/reel.mp4" type="video/mp4" />
+            </video>
+            <img
+              className="reel__poster"
+              src="/images/work-01-skyline.jpg"
+              alt="Reel of selected projects"
+            />
+          </div>
+
           {/* 01 flagship */}
           <article className="card work__flagship">
             <div>
@@ -308,8 +343,7 @@ export default function App() {
               </div>
             </div>
             <div className="card__media work__flagship-media">
-              <img src={FLAGSHIP.img} alt={FLAGSHIP.alt} />
-              <span className="card__badge">Screenshot — coming soon</span>
+              <Shot name={FLAGSHIP.img} alt={FLAGSHIP.alt} />
             </div>
           </article>
 
@@ -318,8 +352,7 @@ export default function App() {
             {WORK.map((p) => (
               <article className="card" key={p.num}>
                 <div className="card__media">
-                  <img src={p.img} alt={p.alt} />
-                  <span className="card__badge">Screenshot soon</span>
+                  <Shot name={p.img} alt={p.alt} />
                 </div>
                 <div className="card__num">{p.num}</div>
                 <h3 className="card__title">{p.title}</h3>
@@ -332,7 +365,7 @@ export default function App() {
                   ))}
                 </div>
                 <div className="card__foot">
-                  <ViewLive href={p.href} />
+                  <ViewLive href={p.href} label={p.liveLabel} />
                 </div>
               </article>
             ))}
