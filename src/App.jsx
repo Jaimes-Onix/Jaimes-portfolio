@@ -32,7 +32,7 @@ const WORK = [
     tags: ['3D', 'Motion', 'React'],
     href: BRAND_URL,
     img: 'work-03-product',
-    alt: 'Tester smartwatch product render',
+    alt: 'Tester Smart Watch Pro product page',
     liveLabel: null,
   },
   {
