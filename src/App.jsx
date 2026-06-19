@@ -509,12 +509,13 @@ function HeroSwitcher() {
 }
 
 /* ---------- Loading intro (first open) ---------- */
+/* Skyline-style intro: longfazers + % + name wordmark + spaceship loader */
 function Intro({ onDone }) {
   const [pct, setPct] = useState(0)
   const [exit, setExit] = useState(false)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const dur = reduce ? 350 : 1500
+    const dur = reduce ? 400 : 2600
     let raf, start
     const tick = (t) => {
       if (start == null) start = t
@@ -522,19 +523,26 @@ function Intro({ onDone }) {
       setPct(p)
       if (p < 100) raf = requestAnimationFrame(tick)
       else {
-        setTimeout(() => setExit(true), 220)
-        setTimeout(onDone, 220 + 650)
+        setExit(true)
+        setTimeout(onDone, 1200)
       }
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
   }, [onDone])
   return (
-    <div className={`intro${exit ? ' intro--exit' : ''}`} aria-hidden="true">
-      <div className="intro__inner">
-        <span className="intro__mark">JEC</span>
-        <div className="intro__bar"><i style={{ width: `${pct}%` }} /></div>
-        <span className="intro__pct">{String(pct).padStart(3, '0')}</span>
+    <div className={`skyintro${exit ? ' is-done' : ''}`} aria-hidden="true">
+      <div className="longfazers"><span /><span /><span /><span /></div>
+      <span className="pre-pct">{pct}%</span>
+      <div className="pre-brand">JAIMES CABANTE</div>
+      <div className="pre-ship">
+        <div className="loader">
+          <span><span /><span /><span /><span /></span>
+          <div className="base">
+            <span />
+            <div className="face" />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -559,8 +567,7 @@ function CubeAnim() {
   )
 }
 
-/* ---------- Experience + Education: 3 switchable designs + certificates ---------- */
-const CRED_NAMES = ['Timeline', 'Split', 'Cards']
+/* ---------- Experience + Education (Split) + certificates ---------- */
 const CERTS = [
   { title: 'Agents & AI at the Frontier!', issuer: 'AI Cebu Community · 2026', img: 'cert-aicebu' },
   { title: 'University Tech Talk', issuer: 'Flexisource IT · 2024', img: 'cert-flexisource' },
@@ -591,84 +598,30 @@ function EduBlock() {
   )
 }
 function CredentialsSection() {
-  const [d, setD] = useState(0)
   return (
     <section id="experience" className="section">
-      <div className="section__inner reveal">
-        <div className="about-switch-row">
-          <p className="eyebrow">Experience &amp; Education</p>
-          <button className="about-switch" onClick={() => setD((d + 1) % 3)} aria-label="Change layout">
-            <span className="hero-switch__dot" /> Design — {CRED_NAMES[d]}
-            <span className="hero-switch__count">{d + 1}/3</span>
-            <span aria-hidden="true">↻</span>
-          </button>
+      <div className="section__inner reveal cred-split">
+        <div>
+          <h2 className="h2 cred-h cred-h--top0">Experience</h2>
+          {EXPERIENCE.map((e, i) => (
+            <div className="exp" key={i}>
+              <div>
+                <div className="exp__company">{e.company}</div>
+                <div className="exp__dates">{e.dates}</div>
+              </div>
+              <div className="exp__main">
+                <h3 className="exp__role">{e.role}</h3>
+                <p className="exp__desc">{e.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
-
-        {d === 0 && (
-          <>
-            <h2 className="h2 cred-h">Experience</h2>
-            <div className="cred-timeline">
-              {EXPERIENCE.map((e, i) => (
-                <div className="cred-tl-item" key={i}>
-                  <span className="cred-tl-dot" />
-                  <div>
-                    <div className="exp__company">{e.company} · {e.dates}</div>
-                    <h3 className="exp__role">{e.role}</h3>
-                    <p className="exp__desc">{e.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <h2 className="h2 cred-h">Education</h2>
-            <EduBlock />
-            <p className="eyebrow cred-certlabel">Certificates</p>
-            <CertCards />
-          </>
-        )}
-
-        {d === 1 && (
-          <div className="cred-split">
-            <div>
-              <h2 className="h2 cred-h cred-h--top0">Experience</h2>
-              {EXPERIENCE.map((e, i) => (
-                <div className="exp" key={i}>
-                  <div>
-                    <div className="exp__company">{e.company}</div>
-                    <div className="exp__dates">{e.dates}</div>
-                  </div>
-                  <div className="exp__main">
-                    <h3 className="exp__role">{e.role}</h3>
-                    <p className="exp__desc">{e.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div>
-              <h2 className="h2 cred-h cred-h--top0">Education</h2>
-              <EduBlock />
-              <p className="eyebrow cred-certlabel">Certificates</p>
-              <CertCards />
-            </div>
-          </div>
-        )}
-
-        {d === 2 && (
-          <>
-            <h2 className="h2 cred-h cred-h--top0">Experience</h2>
-            <div className="cred-cards">
-              {EXPERIENCE.map((e, i) => (
-                <div className="cred-card" key={i}>
-                  <div className="exp__company">{e.company} · {e.dates}</div>
-                  <h3 className="exp__role">{e.role}</h3>
-                  <p className="exp__desc">{e.desc}</p>
-                </div>
-              ))}
-            </div>
-            <h2 className="h2 cred-h">Education &amp; Certificates</h2>
-            <div className="cred-card cred-card--edu"><EduBlock /></div>
-            <CertCards />
-          </>
-        )}
+        <div>
+          <h2 className="h2 cred-h cred-h--top0">Education</h2>
+          <EduBlock />
+          <p className="eyebrow cred-certlabel">Certificates</p>
+          <CertCards />
+        </div>
       </div>
     </section>
   )
@@ -695,51 +648,31 @@ function AboutPhoto({ className }) {
 }
 
 function AboutSection() {
-  const [d, setD] = useState(0)
   return (
     <section id="about" className="section section--tinted">
       <div className="section__inner reveal">
-        <div className="about-switch-row">
-          <p className="eyebrow">About</p>
-          <button className="about-switch" onClick={() => setD((d + 1) % 3)} aria-label="Change about design">
-            <span className="hero-switch__dot" /> Design — {ABOUT_NAMES[d]}
-            <span className="hero-switch__count">{d + 1}/3</span>
-            <span aria-hidden="true">↻</span>
-          </button>
-        </div>
-
-        {d === 0 && (
-          <div className="about-d1">
+        <div className="about-wrap">
+        <p className="eyebrow about-eyebrow">About</p>
+        <div className="about-d1">
+          <div className="about-photo-col">
             <AboutPhoto className="about-photo--card" />
-            <div className="about-body">
-              <p className="about__lead">{ABOUT_LEAD}</p>
-              <p className="about__p">{ABOUT_P1}</p>
-              <p className="about__p">{ABOUT_P2}</p>
-            </div>
+            <a
+              className="about-resume"
+              href={RESUME}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={RESUME_FILENAME}
+            >
+              Résumé <span aria-hidden="true">↓</span>
+            </a>
           </div>
-        )}
-
-        {d === 1 && (
-          <div className="about-d2">
-            <div className="about-body">
-              <p className="about__lead">{ABOUT_LEAD}</p>
-              <p className="about__p">{ABOUT_P1}</p>
-              <p className="about__p">{ABOUT_P2}</p>
-            </div>
-            <AboutPhoto className="about-photo--glow" />
+          <div className="about-body">
+            <p className="about__lead">{ABOUT_LEAD}</p>
+            <p className="about__p">{ABOUT_P1}</p>
+            <p className="about__p">{ABOUT_P2}</p>
           </div>
-        )}
-
-        {d === 2 && (
-          <div className="about-d3">
-            <AboutPhoto className="about-photo--medallion" />
-            <p className="about-d3__lead">{ABOUT_LEAD}</p>
-            <div className="about-d3__cols">
-              <p className="about__p">{ABOUT_P1}</p>
-              <p className="about__p">{ABOUT_P2}</p>
-            </div>
-          </div>
-        )}
+        </div>
+        </div>
       </div>
     </section>
   )

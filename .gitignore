@@ -1,6 +1,10 @@
 node_modules
 dist
 dist-ssr
+test-results
+playwright-report
+.playwright
+.last-run.json
 *.local
 .DS_Store
 .vercel
@@ -10,3 +14,5 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+.vercel
