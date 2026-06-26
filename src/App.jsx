@@ -9,6 +9,7 @@ import {
   useSpring,
   animate,
 } from 'framer-motion'
+import STACK_SVG from './stack-icons.json'
 
 const RESUME = '/resume.pdf'
 const RESUME_FILENAME = 'Jaimes-Cabante-Resume.pdf'
@@ -274,234 +275,84 @@ function TopBar({ active }) {
   )
 }
 
-/* ---------- Hero (Framer Motion staggered entrance) ---------- */
-const heroContainer = { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } }
-const lineV = { hidden: { y: '110%' }, show: { y: 0, transition: { duration: 0.78, ease: EASE } } }
-const fadeV = { hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } } }
+/* ---------- Hero — Portfolio text-mask over portrait (cinematic) ---------- */
+const CINE = [0.16, 1, 0.3, 1]
+
+/* Typewriter that loops through roles */
+const HERO_ROLES = ['Automation', 'Front End Developer', 'Back End Developer']
+function Typewriter() {
+  const reduce = useReducedMotion()
+  const [i, setI] = useState(0)
+  const [text, setText] = useState(reduce ? HERO_ROLES[0] : '')
+  const [del, setDel] = useState(false)
+  useEffect(() => {
+    if (reduce) return
+    const full = HERO_ROLES[i]
+    let delay = del ? 45 : 95
+    if (!del && text === full) delay = 1500
+    else if (del && text === '') delay = 350
+    const t = setTimeout(() => {
+      if (!del && text === full) { setDel(true); return }
+      if (del && text === '') { setDel(false); setI((v) => (v + 1) % HERO_ROLES.length); return }
+      setText(full.slice(0, del ? text.length - 1 : text.length + 1))
+    }, delay)
+    return () => clearTimeout(t)
+  }, [text, del, i, reduce])
+  return (
+    <span className="typewriter">
+      {text}
+      <span className="caret" aria-hidden="true" />
+    </span>
+  )
+}
 
 function Hero() {
   const reduce = useReducedMotion()
-  const container = reduce ? {} : { variants: heroContainer, initial: 'hidden', animate: 'show' }
-  const line = reduce ? {} : { variants: lineV }
-  const fade = reduce ? {} : { variants: fadeV }
+  const fade = (d = 0) =>
+    reduce
+      ? {}
+      : { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.8, ease: CINE, delay: d } }
+  const letter = (i) =>
+    reduce
+      ? {}
+      : {
+          initial: { opacity: 0, y: '45%', filter: 'blur(14px)' },
+          animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+          transition: { duration: 0.9, ease: CINE, delay: 0.4 + i * 0.07 },
+        }
   return (
-    <section id="top" className="hero">
-      <div className="wrap">
-        <motion.div {...container}>
-          <motion.p {...fade} className="hero__kicker">
-            <span className="hero__avail"><span className="dot" /> Available for work</span>
-            <span className="sep" /> Automation &amp; Website Developer
-            <span className="sep" /> Cebu, Philippines
-            <span className="sep" /> Portfolio 2026
-          </motion.p>
-          <h1 className="hero__title">
-            <span className="line"><motion.span {...line} style={{ display: 'block' }}>I build</motion.span></span>
-            <span className="line"><motion.span {...line} style={{ display: 'block' }}>websites &amp;</motion.span></span>
-            <span className="line"><motion.span {...line} style={{ display: 'block' }}><span className="accent">automation</span></motion.span></span>
-            <span className="line"><motion.span {...line} style={{ display: 'block' }}>that ship.</motion.span></span>
-          </h1>
-          <motion.div {...fade} className="hero__foot">
-            <p className="hero__sub">
-              From the first prototype to the live URL — I build fast, modern websites and
-              automate the repetitive work behind them, with Claude Code at the center.
-            </p>
-            <div className="hero__cta">
-              <Magnetic className="btn btn--primary" href="#work">View my work <span aria-hidden="true">→</span></Magnetic>
-              <ResumeLink />
-            </div>
-          </motion.div>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-/* ===== Hero variant 2 — Bento grid (Apple-style modular cards) ===== */
-const bentoC = { hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } } }
-const bentoItem = { hidden: { opacity: 0, y: 18, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.55, ease: EASE } } }
-function HeroBento() {
-  const reduce = useReducedMotion()
-  const c = reduce ? {} : { variants: bentoC, initial: 'hidden', animate: 'show' }
-  const it = reduce ? {} : { variants: bentoItem }
-  const hov = reduce ? {} : { whileHover: { y: -4 } }
-  return (
-    <section id="top" className="hero hero--bento">
-      <div className="wrap">
-        <motion.div className="herob" {...c}>
-          <motion.div className="bcard bh-head" {...it} {...hov}>
-            <span className="eyebrow">Automation &amp; Website Developer</span>
-            <h1 className="herob__title">Websites that ship.<br />Automations that <span className="accent">save hours.</span></h1>
-            <div className="hero__cta">
-              <Magnetic className="btn btn--primary" href="#work">View my work <span aria-hidden="true">→</span></Magnetic>
-              <ResumeLink />
-            </div>
-          </motion.div>
-          <motion.div className="bcard bh-photo" {...it} {...hov}>
-            <picture><source srcSet="/assets/profile.webp" type="image/webp" /><img src="/assets/profile.jpg" alt="Jaimes Edward Cabante" /></picture>
-          </motion.div>
-          <motion.div className="bcard bh-status" {...it} {...hov}>
-            <span className="bcard__k">Status</span>
-            <span className="bcard__big"><span className="dot" /> Available</span>
-            <span className="bcard__sub">Cebu, Philippines</span>
-          </motion.div>
-          <motion.div className="bcard bh-stat" {...it} {...hov}>
-            <span className="bcard__k">Shipped</span>
-            <span className="bcard__num">5</span>
-            <span className="bcard__sub">live builds</span>
-          </motion.div>
-          <motion.div className="bcard bh-tech" {...it} {...hov}>
-            <span className="bcard__k">Stack</span>
-            <span className="bcard__tech">React · n8n · Claude Code · Supabase · Vercel</span>
-          </motion.div>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-/* ===== Hero variant 3 — Glassmorphism (light) ===== */
-function HeroGlass() {
-  const reduce = useReducedMotion()
-  return (
-    <section id="top" className="hero hero--glass">
-      <div className="herog__bg" aria-hidden="true">
-        <span className="blob blob--1" /><span className="blob blob--2" /><span className="blob blob--3" />
-      </div>
-      <div className="wrap herog__inner">
-        <motion.div
-          className="herog__panel"
-          initial={reduce ? false : { opacity: 0, y: 24, scale: 0.98 }}
-          animate={reduce ? false : { opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: EASE }}
-        >
-          <span className="eyebrow">Automation &amp; Website Developer · Cebu, PH</span>
-          <h1 className="herog__title">Design. Build. <span className="accent">Automate.</span></h1>
-          <p className="herog__sub">
-            Modern websites and the automations behind them — built end to end with Claude Code,
-            shipped to a live URL.
-          </p>
-          <div className="hero__cta">
-            <Magnetic className="btn btn--primary" href="#work">View my work <span aria-hidden="true">→</span></Magnetic>
-            <ResumeLink />
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-/* ===== Hero variant 4 — Editorial / Magazine ===== */
-function HeroEditorial() {
-  const reduce = useReducedMotion()
-  const fade = (d = 0) => (reduce ? {} : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, ease: EASE, delay: d } })
-  return (
-    <section id="top" className="hero hero--edit">
-      <div className="wrap heroe">
-        <div className="heroe__main">
-          <motion.span className="eyebrow" {...fade(0)}>Portfolio — Issue 2026</motion.span>
-          <motion.h1 className="heroe__title" {...fade(0.06)}>Full-stack websites,<br /><span className="accent">end-to-end automation.</span></motion.h1>
-          <motion.p className="heroe__deck" {...fade(0.12)}>
-            I build modern, fast websites and wire up the automations that run behind them — from
-            the first prototype to the live URL, with Claude Code at the center of the work.
-          </motion.p>
-          <motion.div className="hero__cta" {...fade(0.18)}>
-            <Magnetic className="btn btn--primary" href="#work">View my work <span aria-hidden="true">→</span></Magnetic>
-            <ResumeLink />
-          </motion.div>
-        </div>
+    <section id="top" className="hero hero--mask">
+      <div className="hmask">
         <motion.figure
-          className="heroe__fig"
-          initial={reduce ? false : { opacity: 0, scale: 1.08 }}
+          className="hmask__photo"
+          initial={reduce ? false : { opacity: 0, scale: 1.16 }}
           animate={reduce ? false : { opacity: 1, scale: 1 }}
-          transition={{ duration: 0.9, ease: EASE }}
+          transition={{ duration: 1.9, ease: CINE }}
         >
-          <picture><source srcSet="/assets/profile.webp" type="image/webp" /><img src="/assets/profile.jpg" alt="Jaimes Edward Cabante" /></picture>
-          <figcaption>Jaimes Edward Cabante — Cebu, PH</figcaption>
+          <img src="/images/hero-portrait.png" alt="Jaimes Edward Cabante" />
         </motion.figure>
-      </div>
-    </section>
-  )
-}
 
-/* ===== Hero variant 5 — Kinetic (rotating word) ===== */
-const ROT = ['websites', 'automations', 'dashboards', 'workflows']
-function HeroKinetic() {
-  const reduce = useReducedMotion()
-  const [i, setI] = useState(0)
-  useEffect(() => {
-    if (reduce) return
-    const id = setInterval(() => setI((v) => (v + 1) % ROT.length), 2200)
-    return () => clearInterval(id)
-  }, [reduce])
-  return (
-    <section id="top" className="hero hero--kinetic">
-      <div className="wrap herok">
-        <motion.span
-          className="eyebrow herok__eye"
-          initial={reduce ? false : { opacity: 0, y: 14 }}
-          animate={reduce ? false : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: EASE }}
-        >
-          Automation &amp; Website Developer · Cebu, PH
-        </motion.span>
-        <h1 className="herok__title">
-          I build{' '}
-          <span className="herok__rot">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={ROT[i]}
-                className="accent"
-                initial={reduce ? false : { y: '100%', opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={reduce ? { opacity: 0 } : { y: '-100%', opacity: 0 }}
-                transition={{ duration: 0.5, ease: EASE }}
-              >
-                {ROT[i]}
-              </motion.span>
-            </AnimatePresence>
-          </span>
-          <br />that ship.
+        <h1 className="hmask__word" aria-label="Portfolio">
+          <motion.span aria-hidden="true" {...letter(0)}>P</motion.span><motion.span aria-hidden="true" {...letter(1)}>O</motion.span><motion.span aria-hidden="true" {...letter(2)}>R</motion.span>
+          <motion.span aria-hidden="true" className="is-out" {...letter(3)}>T</motion.span><motion.span aria-hidden="true" className="is-out" {...letter(4)}>F</motion.span>
+          <motion.span aria-hidden="true" {...letter(5)}>O</motion.span><motion.span aria-hidden="true" {...letter(6)}>L</motion.span><motion.span aria-hidden="true" {...letter(7)}>I</motion.span><motion.span aria-hidden="true" {...letter(8)}>O</motion.span>
         </h1>
-        <p className="herok__sub">
-          Modern sites and the automations behind them — from the first prototype to the live URL.
-        </p>
-        <div className="hero__cta herok__cta">
-          <Magnetic className="btn btn--primary" href="#work">View my work <span aria-hidden="true">→</span></Magnetic>
-          <ResumeLink />
-        </div>
+
+        <motion.span className="hmask__corner hmask__role" {...fade(1.0)} aria-label="Automation, Front End Developer, Back End Developer">
+          <Typewriter />
+        </motion.span>
+        <motion.a
+          className="hmask__corner hmask__arrow"
+          href="#work"
+          aria-label="View my work"
+          initial={reduce ? false : { opacity: 0 }}
+          animate={reduce ? false : { opacity: 1 }}
+          transition={{ duration: 0.8, ease: CINE, delay: 1.15 }}
+        >⟶</motion.a>
+        <motion.span className="hmask__corner hmask__name" {...fade(1.1)}>Jaimes Edward Cabante</motion.span>
+        <motion.span className="hmask__corner hmask__tag" {...fade(1.2)}>Portfolio 2026</motion.span>
       </div>
     </section>
-  )
-}
-
-/* ===== Hero switcher — cycle the 5 styles ===== */
-const HERO_VARIANTS = [
-  { name: 'Swiss', C: Hero },
-  { name: 'Bento', C: HeroBento },
-  { name: 'Glass', C: HeroGlass },
-  { name: 'Editorial', C: HeroEditorial },
-  { name: 'Kinetic', C: HeroKinetic },
-]
-function HeroSwitcher() {
-  const [i, setI] = useState(0)
-  const Current = HERO_VARIANTS[i].C
-  const go = (d) => setI((v) => (v + d + HERO_VARIANTS.length) % HERO_VARIANTS.length)
-  return (
-    <>
-      <AnimatePresence mode="wait">
-        <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-          <Current />
-        </motion.div>
-      </AnimatePresence>
-      <div className="heroswitch" role="group" aria-label="Hero style switcher">
-        <button className="heroswitch__btn" onClick={() => go(-1)} aria-label="Previous hero style">←</button>
-        <span className="heroswitch__label">
-          Hero · {HERO_VARIANTS[i].name}
-          <span className="heroswitch__count">{i + 1}/{HERO_VARIANTS.length}</span>
-        </span>
-        <button className="heroswitch__btn" onClick={() => go(1)} aria-label="Next hero style">→</button>
-      </div>
-    </>
   )
 }
 
@@ -539,60 +390,61 @@ function Stats() {
 /* ---------- Work (bento, asymmetric) ---------- */
 function Work({ onSelect }) {
   const reduce = useReducedMotion()
+  const trackRef = useRef(null)
+  const [canPrev, setCanPrev] = useState(false)
+  const [canNext, setCanNext] = useState(true)
+
+  const update = () => {
+    const el = trackRef.current
+    if (!el) return
+    setCanPrev(el.scrollLeft > 8)
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 8)
+  }
+  useEffect(() => {
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  const nudge = (dir) => {
+    const el = trackRef.current
+    if (!el) return
+    const card = el.querySelector('.wcard')
+    const amount = card ? card.offsetWidth + 22 : el.clientWidth * 0.85
+    el.scrollBy({ left: dir * amount, behavior: reduce ? 'auto' : 'smooth' })
+  }
+
   return (
     <section id="work" className="section">
       <div className="wrap">
         <Reveal>
-          <div className="sec-head">
+          <div className="work-head">
             <div>
               <span className="eyebrow">Selected work</span>
               <h2 className="h2 sec-head__title">Four builds,<br />shipped live.</h2>
             </div>
-            <p className="lead">Each one taken end to end — designed, built, and deployed to a live URL.</p>
-          </div>
-        </Reveal>
-
-        <div className="pgrid">
-          {PROJECTS.map((p, i) => (
-            <motion.button
-              type="button"
-              className="pcard"
-              key={p.num}
-              onClick={() => onSelect(p)}
-              initial={reduce ? false : { opacity: 0, y: 30 }}
-              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '0px 0px -8% 0px' }}
-              transition={{ duration: 0.6, ease: EASE, delay: (i % 2) * 0.08 }}
-              whileHover={reduce ? undefined : { y: -6 }}
-              whileTap={reduce ? undefined : { scale: 0.99 }}
-            >
-              <div className="pcard__media">
-                <Shot name={p.img} alt={p.alt} />
-                <span className="pcard__tagline">{p.tagline}</span>
-              </div>
-              <div className="pcard__body">
-                <div className="pcard__meta">
-                  <span className="pcard__num">{p.num}</span>
-                  <span>{p.category}</span>
-                </div>
-                <h3 className="pcard__title">{p.title}</h3>
-                <p className="pcard__desc">{p.desc}</p>
-                <span className="pcard__cta">View details <span aria-hidden="true">↗</span></span>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-
-        <Reveal>
-          <div className="reel">
-            <video autoPlay muted loop playsInline poster="/images/w-skyline.jpg">
-              <source src="/videos/reel.webm" type="video/webm" />
-              <source src="/videos/reel.mp4" type="video/mp4" />
-            </video>
-            <img className="reel__poster" src="/images/w-skyline.jpg" alt="Reel of selected projects" />
+            <div className="work-nav" role="group" aria-label="Carousel controls">
+              <button type="button" className="work-arrow" onClick={() => nudge(-1)} disabled={!canPrev} aria-label="Previous projects">←</button>
+              <button type="button" className="work-arrow" onClick={() => nudge(1)} disabled={!canNext} aria-label="Next projects">→</button>
+            </div>
           </div>
         </Reveal>
       </div>
+
+      <div className="wcarousel" ref={trackRef} onScroll={update}>
+        {PROJECTS.map((p) => (
+          <button type="button" className="wcard" key={p.num} onClick={() => onSelect(p)}>
+            <div className="wcard__media">
+              <Shot name={p.img} alt={p.alt} />
+            </div>
+            <span className="wcard__cat">{p.category}</span>
+            <h3 className="wcard__title">{p.title}</h3>
+            <p className="wcard__desc">{p.desc}</p>
+            <span className="wcard__cta">View Project <span className="arrow" aria-hidden="true">→</span></span>
+          </button>
+        ))}
+      </div>
+
     </section>
   )
 }
@@ -606,33 +458,29 @@ function About() {
           <div className="sec-head">
             <div>
               <span className="eyebrow">About</span>
-              <h2 className="h2 sec-head__title">I own the<br />whole arc.</h2>
+              <h2 className="h2 sec-head__title">Websites that<br />run themselves.</h2>
             </div>
           </div>
         </Reveal>
 
         <div className="about">
           <Reveal className="about__photo">
-            <picture>
-              <source srcSet="/assets/profile.webp" type="image/webp" />
-              <img src="/assets/profile.jpg" alt="Jaimes Edward Cabante" width="820" height="1024" />
-            </picture>
+            <img src="/images/about-automation.png" alt="My workspace — building websites and wiring up automation flows" loading="lazy" />
           </Reveal>
           <Reveal delay={0.08}>
             <div className="about__body">
               <p className="about__big">
-                I&apos;m Jaimes Edward Cabante — I build modern websites and automate the busywork
-                behind them, with <b>Claude Code</b> at the center of the work.
+                I&apos;m Jaimes Edward Cabante — an <b>Automation &amp; Website Developer</b>. I build
+                fast, modern websites and automate the busywork behind them, so the work runs itself.
               </p>
               <p style={{ color: 'var(--muted)' }}>
-                I take sites end to end — React front ends, Spring Boot and REST APIs, and
-                Supabase and Firebase for data — then wire in automation with n8n, LLMs, and RAG,
-                plus AI-generated media, so the work runs itself.
+                Front to back: React front ends, Spring Boot and REST APIs, and Supabase and
+                Firebase for data — then I wire in automation with n8n, LLMs and RAG, plus
+                AI-generated media.
               </p>
               <p style={{ color: 'var(--muted)' }}>
-                I like owning the whole arc: the first prototype, the design system, the late call
-                to cut a feature, the moment it goes live. Next, I&apos;m looking for a team that wants
-                someone who can build the website and automate everything around it.
+                From the first prototype to the live URL, I own the whole arc — and I build the
+                automations that keep it running long after launch.
               </p>
               <div className="about__cta"><ResumeLink className="btn btn--ghost" /></div>
             </div>
@@ -652,7 +500,7 @@ function Skills() {
           <div className="sec-head">
             <div>
               <span className="eyebrow">Skills</span>
-              <h2 className="h2 sec-head__title">Websites, backend &amp; automation.</h2>
+              <h2 className="h2 sec-head__title">Software skills.</h2>
             </div>
             <p className="lead">Fast, modern front ends, a solid backend, and the automation that ties it together.</p>
           </div>
@@ -684,58 +532,188 @@ function Skills() {
   )
 }
 
+/* ---------- Tech stack (icon grid) — official logos via tech-stack-icons ---------- */
+const STACK = [
+  { cat: 'Frontend', items: [['React', 'react'], ['Tailwind', 'tailwindcss'], ['Framer Motion', 'framer']] },
+  { cat: 'Backend & Data', items: [['Spring Boot', 'spring'], ['Supabase', 'supabase'], ['Firebase', 'firebase']] },
+  { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Claude Code', 'claude'], ['Vercel', 'vercel']] },
+  { cat: 'Languages & Tools', items: [['TypeScript', 'typescript'], ['JavaScript', 'js'], ['GitHub', 'github']] },
+  {
+    cat: 'AIGC Tools',
+    wide: true,
+    items: [
+      ['ElevenLabs', 'elevenlabsai'],
+      ['CapCut', null, 'CC'],
+      ['DaVinci Resolve', null, 'DR'],
+      ['Higgsfield', null, 'HF'],
+      ['Flow', null, 'FL'],
+    ],
+  },
+]
+function TechStack() {
+  return (
+    <section id="stack" className="section">
+      <div className="wrap">
+        <Reveal>
+          <div className="sec-head">
+            <div>
+              <span className="eyebrow">Tech stack</span>
+              <h2 className="h2 sec-head__title">Technologies I<br />work with.</h2>
+            </div>
+            <p className="lead">The tools and technologies I use to build modern, fast, and reliable applications.</p>
+          </div>
+        </Reveal>
+        <Reveal>
+          <div className="stackgrid">
+            {STACK.map((g) => (
+              <div className={g.wide ? 'stackcard stackcard--wide' : 'stackcard'} key={g.cat}>
+                <div className="stackcard__h">{g.cat}</div>
+                <div className="stackitems">
+                  {g.items.map(([label, name, mono]) => (
+                    <div className="stackitem" key={label}>
+                      {name ? (
+                        <span className="stackitem__ic" dangerouslySetInnerHTML={{ __html: STACK_SVG[name] }} />
+                      ) : (
+                        <span className="stackitem__ic stackitem__mono">{mono}</span>
+                      )}
+                      <span className="stackitem__label">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+        <Reveal>
+          <div className="stacknote">
+            <span className="stacknote__ic" aria-hidden="true">&lt;/&gt;</span>
+            <div>
+              <strong>Always learning, always building.</strong>
+              <span>Exploring new tools to ship better, faster.</span>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
 /* ---------- Experience + Education ---------- */
-function Credentials() {
+/* ---------- Experience (timeline) ---------- */
+function Experience() {
   return (
     <section id="experience" className="section">
       <div className="wrap">
         <Reveal>
           <div className="sec-head">
             <div>
-              <span className="eyebrow">Experience &amp; Education</span>
-              <h2 className="h2 sec-head__title">The path so far.</h2>
+              <span className="eyebrow">Experience</span>
+              <h2 className="h2 sec-head__title">Where I&apos;ve worked.</h2>
             </div>
+            <p className="lead">Roles where I built and shipped real software, end to end.</p>
+          </div>
+        </Reveal>
+        <Reveal>
+          <ol className="timeline">
+            {EXPERIENCE.map((e, i) => (
+              <li className="tl" key={i}>
+                <span className="tl__dot" aria-hidden="true" />
+                <div className="tl__card">
+                  <span className="tl__dates">{e.dates}</span>
+                  <h3 className="tl__role">{e.role}</h3>
+                  <div className="tl__company">{e.company}</div>
+                  <p className="tl__desc">{e.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Education + certificates (card grid + lightbox) ---------- */
+function Education() {
+  const reduce = useReducedMotion()
+  const [cert, setCert] = useState(null)
+  useEffect(() => {
+    if (!cert) return
+    const onKey = (e) => e.key === 'Escape' && setCert(null)
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [cert])
+  return (
+    <section id="education" className="section">
+      <div className="wrap">
+        <Reveal>
+          <div className="sec-head">
+            <div>
+              <span className="eyebrow">Education</span>
+              <h2 className="h2 sec-head__title">Where I learned.</h2>
+            </div>
+            <p className="lead">The degree behind the work — plus a few things I&apos;ve picked up since.</p>
           </div>
         </Reveal>
 
         <Reveal>
-          <div className="cred">
-            <div>
-              <h3 className="cred__h">Experience</h3>
-              {EXPERIENCE.map((e, i) => (
-                <div className="exp" key={i}>
-                  <div className="exp__dates">{e.dates}</div>
-                  <h4 className="exp__role">{e.role}</h4>
-                  <div className="exp__company">{e.company}</div>
-                  <p className="exp__desc">{e.desc}</p>
+          <div className="degree">
+            <span className="degree__k">Degree</span>
+            <h3 className="degree__title">BS in Information Technology (BSIT)</h3>
+            <p className="degree__sub">Cebu Institute of Technology – University · 2020–2025</p>
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <p className="eyebrow eyebrow--muted certlabel">Certificates</p>
+          <div className="certgrid">
+            {CERTS.map((c) => (
+              <button className="cert" key={c.title} type="button" onClick={() => setCert(c)}>
+                <div className="cert__media">
+                  <img src={`/images/${c.img}.jpg`} alt={c.title} loading="lazy" />
                 </div>
-              ))}
-            </div>
-            <div>
-              <h3 className="cred__h">Education</h3>
-              <div className="edu">
-                <h4 className="edu__title">BS in Information Technology (BSIT)</h4>
-                <p className="edu__sub">Cebu Institute of Technology – University · 2020–2025</p>
-              </div>
-              <p className="eyebrow eyebrow--muted certlabel">Certificates</p>
-              <div className="certs">
-                {CERTS.map((c) => (
-                  <a className="cert" key={c.title} href={`/images/${c.img}.jpg`} target="_blank" rel="noopener noreferrer">
-                    <div className="cert__media">
-                      <img src={`/images/${c.img}.jpg`} alt={c.title} loading="lazy" />
-                    </div>
-                    <div>
-                      <span className="cert__title">{c.title}</span>
-                      <span className="cert__issuer">{c.issuer}</span>
-                    </div>
-                    <span className="cert__go" aria-hidden="true">↗</span>
-                  </a>
-                ))}
-              </div>
-            </div>
+                <div>
+                  <span className="cert__title">{c.title}</span>
+                  <span className="cert__issuer">{c.issuer}</span>
+                </div>
+                <span className="cert__go" aria-hidden="true">↗</span>
+              </button>
+            ))}
           </div>
         </Reveal>
       </div>
+
+      <AnimatePresence>
+        {cert && (
+          <motion.div
+            className="lightbox"
+            onClick={() => setCert(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={cert.title}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <button className="lightbox__close" onClick={() => setCert(null)} aria-label="Close">✕</button>
+            <motion.img
+              className="lightbox__img"
+              src={`/images/${cert.img}.jpg`}
+              alt={cert.title}
+              onClick={(e) => e.stopPropagation()}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.26, ease: EASE }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
@@ -837,12 +815,13 @@ export default function App() {
       <motion.div className="progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
       <TopBar active={active} />
       <main>
-        <HeroSwitcher />
-        <Stats />
-        <Work onSelect={setSelected} />
+        <Hero />
         <About />
+        <Work onSelect={setSelected} />
         <Skills />
-        <Credentials />
+        <TechStack />
+        <Experience />
+        <Education />
       </main>
 
       <AnimatePresence>
