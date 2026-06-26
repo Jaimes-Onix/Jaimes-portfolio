@@ -564,7 +564,7 @@ function About() {
           <Reveal className="about2__left">
             <span className="eyebrow">About me</span>
             <h2 className="about2__title">
-              I build websites, and the <span className="accent">automations behind them.</span>
+              I build websites and <span className="accent">automate manual business processes.</span>
             </h2>
             <p className="about2__lede">
               I&apos;m Jaimes Edward Cabante, an <span className="about2__hl">Automation &amp; Website
@@ -666,7 +666,7 @@ const MONO_LOGOS = new Set(['github', 'vercel', 'elevenlabsai'])
 const STACK = [
   { cat: 'Frontend', items: [['React', 'react'], ['Tailwind', 'tailwindcss'], ['Framer Motion', 'framer']] },
   { cat: 'Backend & Data', items: [['Spring Boot', 'spring'], ['Supabase', 'supabase'], ['Firebase', 'firebase']] },
-  { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Claude Code', 'claude'], ['Vercel', 'vercel']] },
+  { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Make', '/images/make.png'], ['GoHighLevel', '/images/gohighlevel.svg'], ['Claude Code', 'claude'], ['Vercel', 'vercel']] },
   { cat: 'Languages & Tools', items: [['TypeScript', 'typescript'], ['JavaScript', 'js'], ['GitHub', 'github']] },
   {
     cat: 'AIGC (AI Generated Content)',
