@@ -307,13 +307,13 @@ const CINE = [0.16, 1, 0.3, 1]
 
 /* Typewriter that loops through roles */
 const HERO_ROLES = ['Automation', 'Front-End Developer', 'Back-End Developer']
-function Typewriter() {
+function Typewriter({ start = true }) {
   const reduce = useReducedMotion()
   const [i, setI] = useState(0)
   const [text, setText] = useState(reduce ? HERO_ROLES[0] : '')
   const [del, setDel] = useState(false)
   useEffect(() => {
-    if (reduce) return
+    if (reduce || !start) return
     const full = HERO_ROLES[i]
     let delay = del ? 45 : 95
     if (!del && text === full) delay = 1500
@@ -324,7 +324,7 @@ function Typewriter() {
       setText(full.slice(0, del ? text.length - 1 : text.length + 1))
     }, delay)
     return () => clearTimeout(t)
-  }, [text, del, i, reduce])
+  }, [text, del, i, reduce, start])
   return (
     <span className="typewriter">
       {text}
@@ -362,15 +362,15 @@ const FLOAT_TECH = [
   ['framer', '70%', '83%', '1.2s'],
   ['vercel', '80%', '92%', '2.3s'],
 ]
-function FloatChip({ icon, top, left, delay, inDelay }) {
+function FloatChip({ icon, top, left, delay, inDelay, start = true }) {
   const reduce = useReducedMotion()
   const controls = useAnimationControls()
   const timer = useRef()
   useEffect(() => {
     if (reduce) controls.set({ opacity: 1, scale: 1 })
-    else controls.start({ opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 200, damping: 16, delay: inDelay } })
+    else if (start) controls.start({ opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 200, damping: 16, delay: inDelay } })
     return () => clearTimeout(timer.current)
-  }, [])
+  }, [start])
   return (
     <span className="floatpos" style={{ top, left }}>
       <span className="floatbob" style={{ animationDelay: delay }}>
@@ -395,19 +395,32 @@ function FloatChip({ icon, top, left, delay, inDelay }) {
   )
 }
 
-function Hero({ theme }) {
+function Hero({ theme, start = true }) {
   const light = theme === 'light'
   const reduce = useReducedMotion()
+  // entrance waits 3s AFTER the intro preloader splits open, then plays
+  const [play, setPlay] = useState(false)
+  useEffect(() => {
+    if (!start) { setPlay(false); return }
+    const t = setTimeout(() => setPlay(true), 1000)
+    return () => clearTimeout(t)
+  }, [start])
   const fade = (d = 0) =>
     reduce
       ? {}
-      : { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.8, ease: CINE, delay: d } }
+      : {
+          initial: { opacity: 0, y: 16 },
+          animate: play ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 },
+          transition: { duration: 0.8, ease: CINE, delay: d },
+        }
   const letter = (i) =>
     reduce
       ? {}
       : {
           initial: { opacity: 0, y: '45%', filter: 'blur(14px)' },
-          animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+          animate: play
+            ? { opacity: 1, y: 0, filter: 'blur(0px)' }
+            : { opacity: 0, y: '45%', filter: 'blur(14px)' },
           transition: { duration: 0.9, ease: CINE, delay: 0.4 + i * 0.07 },
         }
   return (
@@ -416,7 +429,7 @@ function Hero({ theme }) {
         <motion.figure
           className={light ? 'hmask__photo hmask__photo--cut' : 'hmask__photo'}
           initial={reduce ? false : { opacity: 0, scale: 1.16 }}
-          animate={reduce ? false : { opacity: 1, scale: 1 }}
+          animate={reduce ? false : play ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.16 }}
           transition={{ duration: 1.9, ease: CINE }}
         >
           <img src={light ? '/images/hero-cutout.png' : '/images/hero-portrait.png'} alt="Jaimes Edward Cabante" />
@@ -429,21 +442,21 @@ function Hero({ theme }) {
         </h1>
 
         <motion.span className="hmask__corner hmask__role" {...fade(1.0)} aria-label="Automation, Front End Developer, Back End Developer">
-          <Typewriter />
+          <Typewriter start={play} />
         </motion.span>
         <motion.a
           className="hmask__corner hmask__arrow"
           href="#work"
           aria-label="View my work"
           initial={reduce ? false : { opacity: 0 }}
-          animate={reduce ? false : { opacity: 1 }}
+          animate={reduce ? false : play ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.8, ease: CINE, delay: 1.15 }}
         >⟶</motion.a>
         <motion.span className="hmask__corner hmask__name" {...fade(1.1)}>Jaimes Edward Cabante</motion.span>
         <motion.span className="hmask__corner hmask__tag" {...fade(1.2)}>Portfolio 2026</motion.span>
 
         {FLOAT_TECH.map(([name, top, left, delay], i) => (
-          <FloatChip key={name} icon={floatIcon(name)} top={top} left={left} delay={delay} inDelay={1.4 + i * 0.08} />
+          <FloatChip key={name} icon={floatIcon(name)} top={top} left={left} delay={delay} inDelay={1.4 + i * 0.08} start={play} />
         ))}
       </div>
     </section>
@@ -526,8 +539,17 @@ function Work({ onSelect }) {
       </div>
 
       <div className="wcarousel" ref={trackRef} onScroll={update}>
-        {PROJECTS.map((p) => (
-          <button type="button" className="wcard" key={p.num} onClick={() => onSelect(p)}>
+        {PROJECTS.map((p, i) => (
+          <motion.button
+            type="button"
+            className="wcard"
+            key={p.num}
+            onClick={() => onSelect(p)}
+            initial={reduce ? false : { opacity: 0, y: 34, filter: 'blur(10px)' }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: false, amount: 0.2, margin: '0px 0px -8% 0px' }}
+            transition={{ duration: 0.8, ease: CINE_EASE, delay: i * 0.1 }}
+          >
             <div className="wcard__media">
               <Shot name={p.img} alt={p.alt} />
             </div>
@@ -535,7 +557,7 @@ function Work({ onSelect }) {
             <h3 className="wcard__title">{p.title}</h3>
             <p className="wcard__desc">{p.desc}</p>
             <span className="wcard__cta">View Project <span className="arrow" aria-hidden="true">→</span></span>
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -663,11 +685,19 @@ function Skills() {
 /* ---------- Tech stack (icon grid) — official logos via tech-stack-icons ---------- */
 /* white-only logos: invert them in light mode so they don't vanish on the white card */
 const MONO_LOGOS = new Set(['github', 'vercel', 'elevenlabsai'])
+/* extra brand logos not in stack-icons.json */
+const HTML5_SVG = '<svg viewBox="0 0 24 24"><path d="M4 2l1.6 18.4L12 22l6.4-1.6L20 2z" fill="#E44D26"/><path d="M12 3.5v16.9l5.1-1.3L18.5 3.5z" fill="#F16529"/><text x="12" y="15.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="9" fill="#fff">5</text></svg>'
+const CSS3_SVG = '<svg viewBox="0 0 24 24"><path d="M4 2l1.6 18.4L12 22l6.4-1.6L20 2z" fill="#1572B6"/><path d="M12 3.5v16.9l5.1-1.3L18.5 3.5z" fill="#33A9DC"/><text x="12" y="15.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="9" fill="#fff">3</text></svg>'
+const GODADDY_SVG = '<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#1BDBDB"/><text x="12" y="17.4" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="15" fill="#16161D">G</text></svg>'
+const PYTHON_SVG = '<svg viewBox="0 0 24 24"><path fill="#3776AB" d="M11.9 0c-1 0-2 .1-2.8.3C6.7.7 6.3 1.6 6.3 3.2v2.1h5.7v.7H4.2c-1.6 0-3 1-3.5 2.8-.5 2-.5 3.3 0 5.4.4 1.6 1.4 2.8 3 2.8h2V12.5c0-1.8 1.6-3.4 3.4-3.4h5.7c1.5 0 2.8-1.3 2.8-2.9V3.2c0-1.5-1.3-2.7-2.8-3C13.9.1 12.9 0 11.9 0zM8.8 1.8c.6 0 1 .5 1 1.1s-.4 1-1 1-1-.4-1-1 .4-1.1 1-1.1z"/><path fill="#FFD43B" d="M18.6 6v2.3c0 1.9-1.6 3.5-3.4 3.5H9.5c-1.5 0-2.8 1.3-2.8 2.9v5.4c0 1.5 1.3 2.4 2.8 2.9 1.8.5 3.5.6 5.7 0 1.4-.4 2.8-1.2 2.8-2.9v-2.1h-5.7v-.7h8.5c1.6 0 2.2-1.1 2.8-2.8.6-1.8.5-3.5 0-5.4-.4-1.6-1.2-2.8-2.8-2.8h-2.2zM15.2 19.8c.6 0 1 .4 1 1s-.4 1.1-1 1.1-1-.5-1-1.1.4-1 1-1z"/></svg>'
+const JAVA_SVG = '<svg viewBox="0 0 24 24"><path fill="#0074BD" d="M8.9 18.2s-.9.6.7.7c1.9.2 2.9.2 5-.2 0 0 .6.4 1.4.7-4.8 2-10.8-.1-7.1-1.2zM8.3 15.6s-1 .8.6.9c2.1.2 3.7.2 6.5-.3 0 0 .4.4 1 .6-5.8 1.7-12.3.1-8.1-1.2z"/><path fill="#EA2D2E" d="M13.1 11.1c1.2 1.3-.3 2.5-.3 2.5s2.9-1.5 1.6-3.4c-1.2-1.8-2.2-2.6 2.9-5.6 0 0-8.1 2-4.2 6.5z"/><path fill="#0074BD" d="M18.5 19.9s.7.6-.8 1c-2.7.8-11.4 1.1-13.8 0-.9-.4.8-.9 1.3-1 .6-.1.9-.1.9-.1-1-.7-6.3 1.4-2.7 2 9.7 1.6 17.7-.7 15.1-1.9zM9.4 12.9s-4.4 1-1.6 1.4c1.2.2 3.6.1 5.8-.1 1.8-.1 3.6-.5 3.6-.5s-.6.3-1.1.6c-4.5 1.2-13.1.6-10.6-.6 2.1-1 3.9-.8 3.9-.8zM16.9 17.1c4.5-2.4 2.4-4.6 1-4.3-.4.1-.5.2-.5.2s.1-.2.4-.3c2.7-1 4.9 2.8-1 4.6 0 0 .1-.1.1-.2z"/><path fill="#EA2D2E" d="M14.4 0s2.5 2.5-2.4 6.3c-3.9 3.1-.9 4.9 0 6.9-2.3-2.1-4-3.9-2.9-5.6C10.8 5.1 15.4 3.9 14.4 0z"/><path fill="#0074BD" d="M9.9 23.9c4.3.3 10.9-.2 11.1-2.2 0 0-.3.8-3.6 1.4-3.7.7-8.3.6-11 .2 0 0 .6.5 3.5.6z"/></svg>'
+const STACK_ICONS = { ...STACK_SVG, html5: HTML5_SVG, css3: CSS3_SVG, godaddy: GODADDY_SVG, python: PYTHON_SVG, java: JAVA_SVG }
 const STACK = [
-  { cat: 'Frontend', items: [['React', 'react'], ['Tailwind', 'tailwindcss'], ['Framer Motion', 'framer']] },
+  { cat: 'Frontend', items: [['React', 'react'], ['HTML5', 'html5'], ['CSS3', 'css3'], ['Tailwind', 'tailwindcss'], ['Framer Motion', 'framer']] },
   { cat: 'Backend & Data', items: [['Spring Boot', 'spring'], ['Supabase', 'supabase'], ['Firebase', 'firebase']] },
-  { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Make', '/images/make.png'], ['GoHighLevel', '/images/gohighlevel.svg'], ['Claude Code', 'claude'], ['Vercel', 'vercel']] },
-  { cat: 'Languages & Tools', items: [['TypeScript', 'typescript'], ['JavaScript', 'js'], ['GitHub', 'github']] },
+  { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Make', '/images/make.png'], ['GoHighLevel', '/images/gohighlevel.svg'], ['Claude Code', 'claude']] },
+  { cat: 'Languages', items: [['TypeScript', 'typescript'], ['JavaScript', 'js'], ['Java', 'java'], ['Python', 'python']] },
+  { cat: 'Deployment & Hosting', items: [['Vercel', 'vercel'], ['GoDaddy', 'godaddy'], ['Git / GitHub', 'github']] },
   {
     cat: 'AIGC (AI Generated Content)',
     wide: true,
@@ -696,7 +726,7 @@ function TechStack() {
         <Reveal>
           <div className="stackgrid">
             {STACK.map((g) => (
-              <div className={g.wide ? 'stackcard stackcard--wide' : 'stackcard'} key={g.cat}>
+              <div className="stackcard" key={g.cat}>
                 <div className="stackcard__h">{g.cat}</div>
                 <div className="stackitems">
                   {g.items.map(([label, name, mono]) => (
@@ -704,7 +734,7 @@ function TechStack() {
                       {name && name.startsWith('/') ? (
                         <span className="stackitem__ic stackitem__imgwrap"><img src={name} alt="" /></span>
                       ) : name ? (
-                        <span className={MONO_LOGOS.has(name) ? 'stackitem__ic stackitem__ic--invert' : 'stackitem__ic'} dangerouslySetInnerHTML={{ __html: STACK_SVG[name] }} />
+                        <span className={MONO_LOGOS.has(name) ? 'stackitem__ic stackitem__ic--invert' : 'stackitem__ic'} dangerouslySetInnerHTML={{ __html: STACK_ICONS[name] }} />
                       ) : (
                         <span className="stackitem__ic stackitem__mono">{mono}</span>
                       )}
@@ -985,18 +1015,18 @@ function Preloader({ onDone }) {
 
   return (
     <div className="preloader">
-      {/* the two dark halves that split apart to reveal the site */}
+      {/* the two dark halves that split apart to reveal the site (glowing inner edges so the split is visible over the dark page) */}
       <motion.div
-        className="preloader__pane preloader__pane--l"
+        className={`preloader__pane preloader__pane--l${cracking ? ' is-edge' : ''}`}
         initial={{ x: 0 }}
         animate={{ x: open ? '-101%' : 0 }}
-        transition={{ duration: 0.8, ease: paneEase }}
+        transition={{ duration: 1.1, ease: paneEase }}
       />
       <motion.div
-        className="preloader__pane preloader__pane--r"
+        className={`preloader__pane preloader__pane--r${cracking ? ' is-edge' : ''}`}
         initial={{ x: 0 }}
         animate={{ x: open ? '101%' : 0 }}
-        transition={{ duration: 0.8, ease: paneEase }}
+        transition={{ duration: 1.1, ease: paneEase }}
         onAnimationComplete={() => open && onDone && onDone()}
       />
 
@@ -1101,7 +1131,7 @@ export default function App() {
       <motion.div className="progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
       <TopBar active={active} theme={theme} onToggleTheme={toggleTheme} />
       <main>
-        <Hero theme={theme} />
+        <Hero theme={theme} start={!intro} />
         <About />
         <Work onSelect={setSelected} />
         <Skills />

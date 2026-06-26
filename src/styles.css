@@ -735,17 +735,19 @@
   /* ---------- Tech stack (icon grid) ---------- */
   .stackgrid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: clamp(14px, 1.6vw, 20px);
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(14px, 1.5vw, 22px);
   }
   .stackcard {
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
-    padding: clamp(18px, 2vw, 26px);
-    transition: border-color 0.25s ease, transform 0.25s ease;
+    padding: clamp(20px, 2vw, 30px);
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
   }
-  .stackcard:hover { border-color: var(--line-strong); transform: translateY(-4px); }
+  .stackcard:hover { border-color: var(--line-strong); transform: translateY(-4px); box-shadow: var(--shadow-md); }
   .stackcard__h {
     display: flex;
     align-items: center;
@@ -754,7 +756,7 @@
     font-weight: 700;
     font-size: 16px;
     color: var(--ink);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
   .stackcard__h::before {
     content: "";
@@ -764,52 +766,56 @@
     background: var(--accent);
     flex: none;
   }
+  /* items fill the card and centre vertically so short cards aren't top-heavy with empty space */
   .stackitems {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 18px 8px;
+    gap: 24px 14px;
+    flex: 1;
+    align-content: center;
   }
   .stackitem {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 9px;
+    gap: 11px;
     text-align: center;
   }
+  /* every logo sits in a consistent rounded tile */
   .stackitem__ic {
-    width: 48px;
-    height: 48px;
-    display: inline-flex;
-    transition: transform 0.2s ease;
+    width: 100%;
+    max-width: 66px;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    padding: 13px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
   .stackitem__ic svg, .stackitem__ic img { width: 100%; height: 100%; object-fit: contain; }
-  .stackitem:hover .stackitem__ic { transform: translateY(-3px); }
+  .stackitem:hover .stackitem__ic {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface-2));
+  }
   /* white-only logos (GitHub, Vercel, ElevenLabs) flip dark in light mode so they stay visible */
   :root[data-theme="light"] .stackitem__ic--invert { filter: invert(1); }
   .stackitem__mono {
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
     color: var(--accent-ink);
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 16px;
+    font-size: 17px;
     letter-spacing: 0.02em;
   }
-  .stackitem__imgwrap { overflow: hidden; border-radius: 9px; }
-  .stackitem__imgwrap img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.16); }
-  .stackitem__label { font-size: 11.5px; color: var(--muted); }
-  /* AIGC card spans full width below the four category cards */
-  .stackcard--wide { grid-column: 1 / -1; }
-  .stackcard--wide .stackitems { grid-template-columns: repeat(5, 1fr); }
+  .stackitem__imgwrap { padding: 9px; overflow: hidden; }
+  .stackitem__label { font-size: 12px; color: var(--muted); }
   @media (max-width: 980px) {
     .stackgrid { grid-template-columns: repeat(2, 1fr); }
-    .stackcard--wide .stackitems { grid-template-columns: repeat(3, 1fr); }
   }
   @media (max-width: 520px) {
     .stackgrid { grid-template-columns: 1fr; }
-    .stackcard--wide .stackitems { grid-template-columns: repeat(3, 1fr); }
     .capgrid { grid-template-columns: 1fr; }
   }
 
@@ -2042,9 +2048,13 @@
   background: #0a0a0a;
   z-index: 1;
   will-change: transform;
+  transition: box-shadow 0.3s ease;
 }
 .preloader__pane--l { left: 0; }
 .preloader__pane--r { right: 0; }
+/* lit inner edges so the doors are clearly visible as they part over the dark page */
+.preloader__pane--l.is-edge { box-shadow: inset -2px 0 0 0 #fff, 8px 0 70px -2px rgba(255, 255, 255, 0.5); }
+.preloader__pane--r.is-edge { box-shadow: inset 2px 0 0 0 #fff, -8px 0 70px -2px rgba(255, 255, 255, 0.5); }
 /* bright crack down the center */
 .preloader__crack {
   position: absolute;
