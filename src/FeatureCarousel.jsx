@@ -18,28 +18,28 @@ const steps = [
     name: 'Frontend',
     title: 'Polished, responsive UI',
     description:
-      'React, Vite, and Tailwind front ends — accessible, fast, and built with tasteful motion that never gets in the way.',
+      'React, Vite, and Tailwind front ends: accessible, fast, and built with tasteful motion that never gets in the way.',
   },
   {
     id: '2',
     name: 'Backend & Data',
     title: 'A solid, secure backend',
     description:
-      'Spring Boot and REST APIs with Supabase / Firebase for data and authenticated access — wired to the front end cleanly.',
+      'Spring Boot and REST APIs with Supabase / Firebase for data and authenticated access, wired to the front end cleanly.',
   },
   {
     id: '3',
     name: 'AI & Automation',
     title: 'AI that removes busywork',
     description:
-      'LLM integration, RAG, and n8n workflows that quietly automate the manual — set once, runs itself.',
+      'LLM integration, RAG, and n8n workflows that quietly automate the manual: set once, runs itself.',
   },
   {
     id: '4',
     name: 'Ship & Deploy',
     title: 'Live, end to end',
     description:
-      'From first prototype to a live URL on Vercel — designed, built, and shipped with Claude Code at the center.',
+      'From first prototype to a live URL on Vercel: designed, built, and shipped with Claude Code at the center.',
   },
 ]
 

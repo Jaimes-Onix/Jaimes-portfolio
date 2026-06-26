@@ -6,10 +6,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0a0a0a" />
 
+    <!-- Set theme before paint (default dark) to avoid a flash -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t !== 'light' && t !== 'dark') t = 'dark';
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+
     <title>Jaimes Edward Cabante | Portfolio</title>
     <meta
       name="description"
-      content="I build modern websites and automate the work behind them — from first prototype to live URL. Automation & Website Developer based in Cebu, PH."
+      content="I build modern websites and automate the work behind them, from first prototype to live URL. Automation & Website Developer based in Cebu, PH."
     />
     <link rel="canonical" href="https://jaimes-portfolio-arca.vercel.app/" />
 
@@ -20,7 +33,7 @@
     <meta property="og:title" content="Jaimes Edward Cabante | Portfolio" />
     <meta
       property="og:description"
-      content="I build modern websites and automate the work behind them — from first prototype to live URL."
+      content="I build modern websites and automate the work behind them, from first prototype to live URL."
     />
     <meta property="og:url" content="https://jaimes-portfolio-arca.vercel.app/" />
     <meta
@@ -35,7 +48,7 @@
     <meta name="twitter:title" content="Jaimes Edward Cabante | Portfolio" />
     <meta
       name="twitter:description"
-      content="I build modern websites and automate the work behind them — from first prototype to live URL."
+      content="I build modern websites and automate the work behind them, from first prototype to live URL."
     />
     <meta
       name="twitter:image"

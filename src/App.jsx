@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, memo } from 'react'
 import {
   motion,
   AnimatePresence,
@@ -7,6 +7,7 @@ import {
   useScroll,
   useMotionValue,
   useSpring,
+  useAnimationControls,
   animate,
 } from 'framer-motion'
 import STACK_SVG from './stack-icons.json'
@@ -17,8 +18,8 @@ const EASE = [0.22, 1, 0.36, 1]
 
 /* ---------- Data ---------- */
 const NAV = [
-  { name: 'Work', href: '#work' },
   { name: 'About', href: '#about' },
+  { name: 'Work', href: '#work' },
   { name: 'Skills', href: '#skills' },
   { name: 'Experience', href: '#experience' },
 ]
@@ -32,7 +33,7 @@ const PROJECTS = [
     category: 'Product Site · Design System',
     year: '2026',
     tagline: 'Straight from the field',
-    desc: 'AI-powered consumer drone — a product site plus a matching pitch deck, both built on one shared design system.',
+    desc: 'AI-powered consumer drone: a product site plus a matching pitch deck, both built on one shared design system.',
     tags: ['Design System', 'Claude Code', 'Vercel'],
     highlights: [
       'Product site + matching pitch deck on one shared design system',
@@ -41,15 +42,15 @@ const PROJECTS = [
     ],
     href: SKYLINE_URL,
     img: 'w-skyline',
-    alt: 'Skyline Aerial — “Straight from the field” gallery',
+    alt: 'Skyline Aerial product site hero',
   },
   {
     num: '02',
-    title: 'Tester Smart Watch Pro',
+    title: 'Smart Watch Pro',
     category: 'Product Page · Motion',
     year: '2025',
     tagline: 'Video-led product page',
-    desc: 'Flagship product page led by a video hero — the Pro-series smartwatch, with spec callouts and pricing.',
+    desc: 'Flagship product page led by a video hero for the Pro-series smartwatch, with spec callouts and pricing.',
     tags: ['React', 'Video/Motion', 'Frontend'],
     highlights: [
       'Full-bleed video hero',
@@ -58,15 +59,15 @@ const PROJECTS = [
     ],
     href: 'https://tester-website-beige.vercel.app/product.html',
     img: 'w-product',
-    alt: 'Tester Smart Watch Pro product page',
+    alt: 'Smart Watch Pro product page',
   },
   {
     num: '03',
-    title: 'Tester Tech',
+    title: 'Tech',
     category: 'Smart-Gadgets Showcase',
     year: '2025',
     tagline: 'AI-generated imagery',
-    desc: 'A smart-gadgets brand page — watches, glasses, and audio — with AI-generated product imagery.',
+    desc: 'A smart-gadgets brand page for watches, glasses, and audio, with AI-generated product imagery.',
     tags: ['Frontend', 'AIGC', 'React'],
     highlights: [
       'Product line: watches, glasses, audio',
@@ -75,7 +76,7 @@ const PROJECTS = [
     ],
     href: 'https://tester-website-beige.vercel.app/TesterTech.html',
     img: 'w-testertech',
-    alt: 'Tester Tech smart-gadgets showcase',
+    alt: 'Tech smart-gadgets showcase',
   },
   {
     num: '04',
@@ -83,7 +84,7 @@ const PROJECTS = [
     category: 'Brand Landing · E-commerce',
     year: '2025',
     tagline: 'Photo → portrait tee',
-    desc: 'Apparel brand landing — upload a pet photo and get a hand-drawn portrait tee, delivered in 48 hours.',
+    desc: 'Apparel brand landing: upload a pet photo and get a hand-drawn portrait tee, delivered in 48 hours.',
     tags: ['React', 'Brand', 'Frontend'],
     highlights: [
       'Photo → hand-drawn portrait flow',
@@ -187,17 +188,21 @@ function Shot({ name, alt }) {
   )
 }
 
-/* whileInView reveal — fades up once, respects reduced motion */
-function Reveal({ children, delay = 0, y = 26, className, style }) {
+/* Cinematic reveal — re-plays every time it enters the viewport (scrolling up or down) */
+const CINE_EASE = [0.16, 1, 0.3, 1]
+function Reveal({ children, delay = 0, y = 40, className, style }) {
   const reduce = useReducedMotion()
+  if (reduce) {
+    return <div className={className} style={style}>{children}</div>
+  }
   return (
     <motion.div
       className={className}
       style={style}
-      initial={reduce ? false : { opacity: 0, y }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-      transition={{ duration: 0.65, ease: EASE, delay }}
+      initial={{ opacity: 0, y, scale: 0.97, filter: 'blur(12px)' }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      viewport={{ once: false, amount: 0.2, margin: '0px 0px -8% 0px' }}
+      transition={{ duration: 1.0, ease: CINE_EASE, delay }}
     >
       {children}
     </motion.div>
@@ -252,23 +257,45 @@ function ResumeLink({ className = 'btn btn--ghost', children }) {
 }
 
 /* ---------- Top bar ---------- */
-function TopBar({ active }) {
+const SunIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+)
+const MoonIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+  </svg>
+)
+function TopBar({ active, theme, onToggleTheme }) {
   return (
     <header className="topbar" id="topbar">
-      <div className="wrap topbar__inner">
-        <a className="brand" href="#top" aria-label="Jaimes Cabante — top">
-          <span className="brand__dot" />
-          Jaimes Cabante
-        </a>
-        <nav className="navlinks" aria-label="Sections">
-          {NAV.map((item) => (
-            <a key={item.name} href={item.href} className={active === item.href.slice(1) ? 'is-active' : ''}>
-              {item.name}
-            </a>
-          ))}
-        </nav>
-        <div className="topbar__right">
-          <ResumeLink className="btn btn--ink">Résumé <span aria-hidden="true">↓</span></ResumeLink>
+      <div className="wrap">
+        <div className="topbar__inner">
+          <a className="brand" href="#top" aria-label="Jaimes Cabante, back to top">
+            <span className="brand__dot" />
+            Jaimes Cabante
+          </a>
+          <nav className="navlinks" aria-label="Sections">
+            {NAV.map((item) => (
+              <a key={item.name} href={item.href} className={active === item.href.slice(1) ? 'is-active' : ''}>
+                {item.name}
+              </a>
+            ))}
+          </nav>
+          <div className="topbar__right">
+            <button
+              type="button"
+              className="themebtn"
+              onClick={onToggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title="Toggle light / dark mode"
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              <span className="themebtn__label">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -279,7 +306,7 @@ function TopBar({ active }) {
 const CINE = [0.16, 1, 0.3, 1]
 
 /* Typewriter that loops through roles */
-const HERO_ROLES = ['Automation', 'Front End Developer', 'Back End Developer']
+const HERO_ROLES = ['Automation', 'Front-End Developer', 'Back-End Developer']
 function Typewriter() {
   const reduce = useReducedMotion()
   const [i, setI] = useState(0)
@@ -306,7 +333,70 @@ function Typewriter() {
   )
 }
 
-function Hero() {
+/* OpenAI / ChatGPT logomark (white) */
+const OPENAI_SVG = '<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.91 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-3.99 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .51 4.91 6.05 6.05 0 0 0 6.52 2.9A5.98 5.98 0 0 0 13.26 22a6.06 6.06 0 0 0 5.77-4.21 5.99 5.99 0 0 0 4-2.9 6.06 6.06 0 0 0-.75-7.07Zm-9.02 12.6a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.78.78 0 0 0 .39-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.5 4.5ZM3.6 18.06a4.47 4.47 0 0 1-.54-3.01l.14.08 4.78 2.76a.78.78 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.14-1.64ZM2.34 7.9a4.48 4.48 0 0 1 2.34-1.97V11.6a.78.78 0 0 0 .39.68l5.84 3.37-2.02 1.17a.07.07 0 0 1-.07 0l-4.83-2.8A4.5 4.5 0 0 1 2.34 7.9Zm16.6 3.86-5.84-3.38L15.12 7.2a.07.07 0 0 1 .07 0l4.83 2.79a4.5 4.5 0 0 1-.68 8.12v-5.67a.78.78 0 0 0-.39-.68Zm2.01-3.02-.14-.09-4.78-2.76a.78.78 0 0 0-.78 0L9.4 9.26V6.93a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66ZM8.3 12.86 6.28 11.7a.07.07 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08L8.7 5.46a.78.78 0 0 0-.39.68l-.01 6.72Zm1.1-2.37 2.6-1.5 2.6 1.5v3l-2.6 1.5-2.6-1.5v-3Z"/></svg>'
+
+/* icon resolver for the hero chips — svg key, image path, or text monogram */
+const floatIcon = (name) => {
+  if (name === 'chatgpt') return OPENAI_SVG
+  if (name === 'higgsfield') return '<img src="/images/higgsfield.webp" alt="" />'
+  if (name === 'ghl') return '<img src="/images/gohighlevel.svg" alt="" />'
+  return STACK_SVG[name]
+}
+
+/* Draggable, floating tech chip — springs back ~3s after release */
+const FLOAT_TECH = [
+  // left strip (clear of the typewriter at top and your name at the bottom)
+  ['chatgpt', '22%', '7%', '0.5s'],
+  ['typescript', '33%', '6%', '0s'],
+  ['supabase', '45%', '4%', '0.7s'],
+  ['n8n', '57%', '8%', '1.4s'],
+  ['github', '69%', '5%', '2.0s'],
+  ['ghl', '80%', '7%', '1.1s'],
+  // right strip (clear of the arrow at top and the tag at the bottom)
+  ['higgsfield', '16%', '85%', '0.9s'],
+  ['react', '26%', '90%', '0.3s'],
+  ['firebase', '36%', '83%', '0.6s'],
+  ['tailwindcss', '47%', '92%', '1.0s'],
+  ['claude', '58%', '86%', '1.7s'],
+  ['framer', '70%', '83%', '1.2s'],
+  ['vercel', '80%', '92%', '2.3s'],
+]
+function FloatChip({ icon, top, left, delay, inDelay }) {
+  const reduce = useReducedMotion()
+  const controls = useAnimationControls()
+  const timer = useRef()
+  useEffect(() => {
+    if (reduce) controls.set({ opacity: 1, scale: 1 })
+    else controls.start({ opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 200, damping: 16, delay: inDelay } })
+    return () => clearTimeout(timer.current)
+  }, [])
+  return (
+    <span className="floatpos" style={{ top, left }}>
+      <span className="floatbob" style={{ animationDelay: delay }}>
+        <motion.div
+          className="floatchip"
+          initial={{ opacity: 0, scale: 0 }}
+          drag={!reduce}
+          dragMomentum={false}
+          whileDrag={{ scale: 1.12 }}
+          animate={controls}
+          onDragStart={() => clearTimeout(timer.current)}
+          onDragEnd={() => {
+            timer.current = setTimeout(() => {
+              controls.start({ x: 0, y: 0, transition: { type: 'spring', stiffness: 130, damping: 14 } })
+            }, 3000)
+          }}
+        >
+          <span className="floatchip__ic" dangerouslySetInnerHTML={{ __html: icon }} />
+        </motion.div>
+      </span>
+    </span>
+  )
+}
+
+function Hero({ theme }) {
+  const light = theme === 'light'
   const reduce = useReducedMotion()
   const fade = (d = 0) =>
     reduce
@@ -324,12 +414,12 @@ function Hero() {
     <section id="top" className="hero hero--mask">
       <div className="hmask">
         <motion.figure
-          className="hmask__photo"
+          className={light ? 'hmask__photo hmask__photo--cut' : 'hmask__photo'}
           initial={reduce ? false : { opacity: 0, scale: 1.16 }}
           animate={reduce ? false : { opacity: 1, scale: 1 }}
           transition={{ duration: 1.9, ease: CINE }}
         >
-          <img src="/images/hero-portrait.png" alt="Jaimes Edward Cabante" />
+          <img src={light ? '/images/hero-cutout.png' : '/images/hero-portrait.png'} alt="Jaimes Edward Cabante" />
         </motion.figure>
 
         <h1 className="hmask__word" aria-label="Portfolio">
@@ -351,6 +441,10 @@ function Hero() {
         >⟶</motion.a>
         <motion.span className="hmask__corner hmask__name" {...fade(1.1)}>Jaimes Edward Cabante</motion.span>
         <motion.span className="hmask__corner hmask__tag" {...fade(1.2)}>Portfolio 2026</motion.span>
+
+        {FLOAT_TECH.map(([name, top, left, delay], i) => (
+          <FloatChip key={name} icon={floatIcon(name)} top={top} left={left} delay={delay} inDelay={1.4 + i * 0.08} />
+        ))}
       </div>
     </section>
   )
@@ -421,7 +515,7 @@ function Work({ onSelect }) {
           <div className="work-head">
             <div>
               <span className="eyebrow">Selected work</span>
-              <h2 className="h2 sec-head__title">Four builds,<br />shipped live.</h2>
+              <h2 className="h2 sec-head__title">Websites I&apos;ve built.</h2>
             </div>
             <div className="work-nav" role="group" aria-label="Carousel controls">
               <button type="button" className="work-arrow" onClick={() => nudge(-1)} disabled={!canPrev} aria-label="Previous projects">←</button>
@@ -450,39 +544,75 @@ function Work({ onSelect }) {
 }
 
 /* ---------- About ---------- */
+function AboutIcon({ name }) {
+  const p = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+  if (name === 'bolt') return <svg {...p}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" /></svg>
+  if (name === 'code') return <svg {...p}><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" /></svg>
+  if (name === 'rocket') return <svg {...p}><path d="M5 14c-2 1-2 5-2 5s4 0 5-2M12 15l-3-3a14 14 0 0 1 7-9c2 0 3 1 3 3a14 14 0 0 1-9 7M9 12l-3 .5M12 15l-.5 3" /></svg>
+  if (name === 'server') return <svg {...p}><rect x="3" y="4" width="18" height="7" rx="1.6" /><rect x="3" y="13" width="18" height="7" rx="1.6" /><path d="M7 7.5h.01M7 16.5h.01" /></svg>
+  if (name === 'spark') return <svg {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" /></svg>
+  if (name === 'layout') return <svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11" /></svg>
+  return <svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>
+}
+
 function About() {
   return (
-    <section id="about" className="section">
+    <section id="about" className="section about2">
       <div className="wrap">
-        <Reveal>
-          <div className="sec-head">
-            <div>
-              <span className="eyebrow">About</span>
-              <h2 className="h2 sec-head__title">Websites that<br />run themselves.</h2>
-            </div>
-          </div>
-        </Reveal>
+        <div className="about2__grid">
+          {/* LEFT — text */}
+          <Reveal className="about2__left">
+            <span className="eyebrow">About me</span>
+            <h2 className="about2__title">
+              I build websites, and the <span className="accent">automations behind them.</span>
+            </h2>
+            <p className="about2__lede">
+              I&apos;m Jaimes Edward Cabante, an <span className="about2__hl">Automation &amp; Website
+              Developer</span>. I build fast, modern websites and automate the busywork behind them,
+              so the work runs itself.
+            </p>
 
-        <div className="about">
-          <Reveal className="about__photo">
-            <img src="/images/about-automation.png" alt="My workspace — building websites and wiring up automation flows" loading="lazy" />
+            <hr className="about2__rule" />
+
+            <div className="about2__point">
+              <span className="about2__ic"><AboutIcon name="bolt" /></span>
+              <div>
+                <h3>Productive Solutions</h3>
+                <p>I focus on building solutions that save time, reduce manual work, and drive results.</p>
+              </div>
+            </div>
+            <div className="about2__point">
+              <span className="about2__ic"><AboutIcon name="code" /></span>
+              <div>
+                <h3>Clean Code. Smart Automation.</h3>
+                <p>I write clean, maintainable code and connect tools that work seamlessly in the background.</p>
+              </div>
+            </div>
+
+            <div className="about2__card">
+              <span className="about2__avatar"><AboutIcon name="live" /><i className="about2__online" /></span>
+              <div>
+                <h3>Always learning. Always building.</h3>
+                <p>Exploring new technologies to build better solutions and create impact.</p>
+              </div>
+            </div>
           </Reveal>
-          <Reveal delay={0.08}>
-            <div className="about__body">
-              <p className="about__big">
-                I&apos;m Jaimes Edward Cabante — an <b>Automation &amp; Website Developer</b>. I build
-                fast, modern websites and automate the busywork behind them, so the work runs itself.
-              </p>
-              <p style={{ color: 'var(--muted)' }}>
-                Front to back: React front ends, Spring Boot and REST APIs, and Supabase and
-                Firebase for data — then I wire in automation with n8n, LLMs and RAG, plus
-                AI-generated media.
-              </p>
-              <p style={{ color: 'var(--muted)' }}>
-                From the first prototype to the live URL, I own the whole arc — and I build the
-                automations that keep it running long after launch.
-              </p>
-              <div className="about__cta"><ResumeLink className="btn btn--ghost" /></div>
+
+          {/* RIGHT — image + stats + CTAs */}
+          <Reveal className="about2__right" delay={0.08}>
+            <div className="about2__photo">
+              <img src="/images/about-workspace.png" alt="Jaimes at a dual-monitor desk building websites and wiring up automation flows" loading="lazy" />
+              <span className="about2__badge" aria-hidden="true">
+                <svg viewBox="0 0 100 100">
+                  <defs><path id="aboutBadgePath" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0" /></defs>
+                  <text><textPath href="#aboutBadgePath" startOffset="0">AUTOMATE · BUILD · REPEAT · AUTOMATE · BUILD · REPEAT · </textPath></text>
+                </svg>
+                <span className="about2__badge-ic"><AboutIcon name="code" /></span>
+              </span>
+            </div>
+
+            <div className="about2__cta">
+              <ResumeLink className="btn btn--primary" />
             </div>
           </Reveal>
         </div>
@@ -491,7 +621,16 @@ function About() {
   )
 }
 
-/* ---------- Skills ---------- */
+/* ---------- Skills (capabilities, not tools) ---------- */
+const SKILLS2 = [
+  { icon: 'layout', title: 'Web development', desc: 'Responsive, accessible sites in React, built on reusable design systems with tasteful motion.' },
+  { icon: 'server', title: 'Backend & APIs', desc: 'REST APIs, authentication, and databases with Spring Boot, Supabase, and Firebase.' },
+  { icon: 'bolt', title: 'Automation', desc: 'n8n workflows and LLM and RAG pipelines that quietly remove manual busywork.' },
+  { icon: 'spark', title: 'AI-generated media', desc: 'Images, video, and voice produced with AIGC tools and wired into real products.' },
+  { icon: 'rocket', title: 'Ship to production', desc: 'From the first prototype to a live URL on Vercel, owned end to end.' },
+  { icon: 'code', title: 'Clean, maintainable code', desc: 'Readable components, sensible structure, and version control on every project.' },
+]
+
 function Skills() {
   return (
     <section id="skills" className="section">
@@ -500,53 +639,44 @@ function Skills() {
           <div className="sec-head">
             <div>
               <span className="eyebrow">Skills</span>
-              <h2 className="h2 sec-head__title">Software skills.</h2>
+              <h2 className="h2 sec-head__title">What I can do for you.</h2>
             </div>
-            <p className="lead">Fast, modern front ends, a solid backend, and the automation that ties it together.</p>
+            <p className="lead">The capabilities I bring, from the first pixel to the automation that keeps it running.</p>
           </div>
         </Reveal>
-
         <Reveal>
-          <div className="skillgrid">
-            {SKILLS.map((s) => (
-              <div className="skillcol" key={s.cat}>
-                <span className="skillcol__no">{s.num}</span>
-                <h3 className="skillcol__cat">{s.cat}</h3>
-                <ul className="skillcol__items">
-                  {s.items.map((it) => <li key={it}>{it}</li>)}
-                </ul>
+          <div className="capgrid">
+            {SKILLS2.map((s) => (
+              <div className="capcard" key={s.title}>
+                <span className="capcard__ic"><AboutIcon name={s.icon} /></span>
+                <h3 className="capcard__title">{s.title}</h3>
+                <p className="capcard__desc">{s.desc}</p>
               </div>
             ))}
           </div>
         </Reveal>
-
-        <div className="marquee" aria-hidden="true">
-          <div className="marquee__track">
-            {[...TECH, ...TECH, ...TECH].map((t, i) => (
-              <span className="marquee__item" key={i}>{t.svg}{t.label}</span>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   )
 }
 
 /* ---------- Tech stack (icon grid) — official logos via tech-stack-icons ---------- */
+/* white-only logos: invert them in light mode so they don't vanish on the white card */
+const MONO_LOGOS = new Set(['github', 'vercel', 'elevenlabsai'])
 const STACK = [
   { cat: 'Frontend', items: [['React', 'react'], ['Tailwind', 'tailwindcss'], ['Framer Motion', 'framer']] },
   { cat: 'Backend & Data', items: [['Spring Boot', 'spring'], ['Supabase', 'supabase'], ['Firebase', 'firebase']] },
   { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Claude Code', 'claude'], ['Vercel', 'vercel']] },
   { cat: 'Languages & Tools', items: [['TypeScript', 'typescript'], ['JavaScript', 'js'], ['GitHub', 'github']] },
   {
-    cat: 'AIGC Tools',
+    cat: 'AIGC (AI Generated Content)',
     wide: true,
     items: [
       ['ElevenLabs', 'elevenlabsai'],
-      ['CapCut', null, 'CC'],
-      ['DaVinci Resolve', null, 'DR'],
-      ['Higgsfield', null, 'HF'],
-      ['Flow', null, 'FL'],
+      ['DaVinci Resolve', '/images/davinci.png'],
+      ['Higgsfield', '/images/higgsfield.webp'],
+      ['CapCut', '/images/capcut.webp'],
+      ['Google Flow', null, 'GF'],
     ],
   },
 ]
@@ -558,9 +688,9 @@ function TechStack() {
           <div className="sec-head">
             <div>
               <span className="eyebrow">Tech stack</span>
-              <h2 className="h2 sec-head__title">Technologies I<br />work with.</h2>
+              <h2 className="h2 sec-head__title">Technologies I work with.</h2>
             </div>
-            <p className="lead">The tools and technologies I use to build modern, fast, and reliable applications.</p>
+            <p className="lead">My toolkit across front end, backend and data, automation and AI, and AI-generated content.</p>
           </div>
         </Reveal>
         <Reveal>
@@ -571,8 +701,10 @@ function TechStack() {
                 <div className="stackitems">
                   {g.items.map(([label, name, mono]) => (
                     <div className="stackitem" key={label}>
-                      {name ? (
-                        <span className="stackitem__ic" dangerouslySetInnerHTML={{ __html: STACK_SVG[name] }} />
+                      {name && name.startsWith('/') ? (
+                        <span className="stackitem__ic stackitem__imgwrap"><img src={name} alt="" /></span>
+                      ) : name ? (
+                        <span className={MONO_LOGOS.has(name) ? 'stackitem__ic stackitem__ic--invert' : 'stackitem__ic'} dangerouslySetInnerHTML={{ __html: STACK_SVG[name] }} />
                       ) : (
                         <span className="stackitem__ic stackitem__mono">{mono}</span>
                       )}
@@ -602,19 +734,16 @@ function TechStack() {
 /* ---------- Experience (timeline) ---------- */
 function Experience() {
   return (
-    <section id="experience" className="section">
+    <section id="experience" className="section exp--center">
       <div className="wrap">
         <Reveal>
-          <div className="sec-head">
-            <div>
-              <span className="eyebrow">Experience</span>
-              <h2 className="h2 sec-head__title">Where I&apos;ve worked.</h2>
-            </div>
-            <p className="lead">Roles where I built and shipped real software, end to end.</p>
+          <div className="sec-head sec-head--center">
+            <span className="eyebrow">Experience</span>
+            <h2 className="h2 sec-head__title">Where I&apos;ve worked.</h2>
           </div>
         </Reveal>
         <Reveal>
-          <ol className="timeline">
+          <ol className="timeline timeline--center">
             {EXPERIENCE.map((e, i) => (
               <li className="tl" key={i}>
                 <span className="tl__dot" aria-hidden="true" />
@@ -656,15 +785,18 @@ function Education() {
               <span className="eyebrow">Education</span>
               <h2 className="h2 sec-head__title">Where I learned.</h2>
             </div>
-            <p className="lead">The degree behind the work — plus a few things I&apos;ve picked up since.</p>
+            <p className="lead">The degree behind the work, plus a few things I&apos;ve picked up since.</p>
           </div>
         </Reveal>
 
         <Reveal>
           <div className="degree">
-            <span className="degree__k">Degree</span>
-            <h3 className="degree__title">BS in Information Technology (BSIT)</h3>
-            <p className="degree__sub">Cebu Institute of Technology – University · 2020–2025</p>
+            <img className="degree__logo" src="/images/citu-logo.png" alt="Cebu Institute of Technology – University logo" />
+            <div className="degree__text">
+              <span className="degree__k">Degree</span>
+              <h3 className="degree__title">BS in Information Technology (BSIT)</h3>
+              <p className="degree__sub">Cebu Institute of Technology – University · 2020–2025</p>
+            </div>
           </div>
         </Reveal>
 
@@ -774,11 +906,164 @@ function Modal({ project, onClose }) {
   )
 }
 
+/* ---------- Intro preloader (hourglass) ---------- */
+const LOADER_SVG = `
+<svg aria-label="Loading" role="img" height="56px" width="56px" viewBox="0 0 56 56" class="loader">
+  <clipPath id="sand-mound-top">
+    <path d="M 14.613 13.087 C 15.814 12.059 19.3 8.039 20.3 6.539 C 21.5 4.789 21.5 2.039 21.5 2.039 L 3 2.039 C 3 2.039 3 4.789 4.2 6.539 C 5.2 8.039 8.686 12.059 9.887 13.087 C 11 14.039 12.25 14.039 12.25 14.039 C 12.25 14.039 13.5 14.039 14.613 13.087 Z" class="loader__sand-mound-top"></path>
+  </clipPath>
+  <clipPath id="sand-mound-bottom">
+    <path d="M 14.613 20.452 C 15.814 21.48 19.3 25.5 20.3 27 C 21.5 28.75 21.5 31.5 21.5 31.5 L 3 31.5 C 3 31.5 3 28.75 4.2 27 C 5.2 25.5 8.686 21.48 9.887 20.452 C 11 19.5 12.25 19.5 12.25 19.5 C 12.25 19.5 13.5 19.5 14.613 20.452 Z" class="loader__sand-mound-bottom"></path>
+  </clipPath>
+  <g transform="translate(2,2)">
+    <g transform="rotate(-90,26,26)" stroke-linecap="round" stroke-dashoffset="153.94" stroke-dasharray="153.94 153.94" stroke="hsl(0,0%,100%)" fill="none">
+      <circle transform="rotate(0,26,26)" r="24.5" cy="26" cx="26" stroke-width="2.5" class="loader__motion-thick"></circle>
+      <circle transform="rotate(90,26,26)" r="24.5" cy="26" cx="26" stroke-width="1.75" class="loader__motion-medium"></circle>
+      <circle transform="rotate(180,26,26)" r="24.5" cy="26" cx="26" stroke-width="1" class="loader__motion-thin"></circle>
+    </g>
+    <g transform="translate(13.75,9.25)" class="loader__model">
+      <path d="M 1.5 2 L 23 2 C 23 2 22.5 8.5 19 12 C 16 15.5 13.5 13.5 13.5 16.75 C 13.5 20 16 18 19 21.5 C 22.5 25 23 31.5 23 31.5 L 1.5 31.5 C 1.5 31.5 2 25 5.5 21.5 C 8.5 18 11 20 11 16.75 C 11 13.5 8.5 15.5 5.5 12 C 2 8.5 1.5 2 1.5 2 Z" fill="hsl(var(--hue),90%,85%)"></path>
+      <g stroke-linecap="round" stroke="hsl(35,90%,90%)">
+        <line y2="20.75" x2="12" y1="15.75" x1="12" stroke-dasharray="0.25 33.75" stroke-width="1" class="loader__sand-grain-left"></line>
+        <line y2="21.75" x2="12.5" y1="16.75" x1="12.5" stroke-dasharray="0.25 33.75" stroke-width="1" class="loader__sand-grain-right"></line>
+        <line y2="31.5" x2="12.25" y1="18" x1="12.25" stroke-dasharray="0.5 107.5" stroke-width="1" class="loader__sand-drop"></line>
+        <line y2="31.5" x2="12.25" y1="14.75" x1="12.25" stroke-dasharray="54 54" stroke-width="1.5" class="loader__sand-fill"></line>
+        <line y2="31.5" x2="12" y1="16" x1="12" stroke-dasharray="1 107" stroke-width="1" stroke="hsl(35,90%,83%)" class="loader__sand-line-left"></line>
+        <line y2="31.5" x2="12.5" y1="16" x1="12.5" stroke-dasharray="12 96" stroke-width="1" stroke="hsl(35,90%,83%)" class="loader__sand-line-right"></line>
+        <g stroke-width="0" fill="hsl(35,90%,90%)">
+          <path d="M 12.25 15 L 15.392 13.486 C 21.737 11.168 22.5 2 22.5 2 L 2 2.013 C 2 2.013 2.753 11.046 9.009 13.438 L 12.25 15 Z" clip-path="url(#sand-mound-top)"></path>
+          <path d="M 12.25 18.5 L 15.392 20.014 C 21.737 22.332 22.5 31.5 22.5 31.5 L 2 31.487 C 2 31.487 2.753 22.454 9.009 20.062 Z" clip-path="url(#sand-mound-bottom)"></path>
+        </g>
+      </g>
+      <g stroke-width="2" stroke-linecap="round" opacity="0.7" fill="none">
+        <path d="M 19.437 3.421 C 19.437 3.421 19.671 6.454 17.914 8.846 C 16.157 11.238 14.5 11.5 14.5 11.5" stroke="hsl(0,0%,100%)" class="loader__glare-top"></path>
+        <path transform="rotate(180,12.25,16.75)" d="M 19.437 3.421 C 19.437 3.421 19.671 6.454 17.914 8.846 C 16.157 11.238 14.5 11.5 14.5 11.5" stroke="hsla(0,0%,100%,0)" class="loader__glare-bottom"></path>
+      </g>
+      <rect height="2" width="24.5" fill="hsl(var(--hue),90%,50%)"></rect>
+      <rect height="1" width="19.5" y="0.5" x="2.5" ry="0.5" rx="0.5" fill="hsl(var(--hue),90%,57.5%)"></rect>
+      <rect height="2" width="24.5" y="31.5" fill="hsl(var(--hue),90%,50%)"></rect>
+      <rect height="1" width="19.5" y="32" x="2.5" ry="0.5" rx="0.5" fill="hsl(var(--hue),90%,57.5%)"></rect>
+    </g>
+  </g>
+</svg>`
+
+/* memoized so the 60fps % counter can't re-inject the SVG and reset its CSS animation */
+const HourglassLoader = memo(function HourglassLoader() {
+  return <span className="preloader__loader" dangerouslySetInnerHTML={{ __html: LOADER_SVG }} />
+})
+
+function Preloader({ onDone }) {
+  const [pct, setPct] = useState(0)
+  const [phase, setPhase] = useState('load') // load → crack → open
+
+  // count 0 → 100 over ~2.8s, then begin the crack
+  useEffect(() => {
+    const DUR = 2800
+    let raf
+    let startT = null
+    const tick = (t) => {
+      if (startT === null) startT = t
+      const p = Math.min(1, (t - startT) / DUR)
+      setPct(Math.round(p * 100))
+      if (p < 1) raf = requestAnimationFrame(tick)
+      else setPhase('crack')
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  // hold the crack flash briefly, then split the panes open
+  useEffect(() => {
+    if (phase !== 'crack') return
+    const t = setTimeout(() => setPhase('open'), 480)
+    return () => clearTimeout(t)
+  }, [phase])
+
+  const paneEase = [0.76, 0, 0.24, 1]
+  const open = phase === 'open'
+  const cracking = phase === 'crack' || phase === 'open'
+
+  return (
+    <div className="preloader">
+      {/* the two dark halves that split apart to reveal the site */}
+      <motion.div
+        className="preloader__pane preloader__pane--l"
+        initial={{ x: 0 }}
+        animate={{ x: open ? '-101%' : 0 }}
+        transition={{ duration: 0.8, ease: paneEase }}
+      />
+      <motion.div
+        className="preloader__pane preloader__pane--r"
+        initial={{ x: 0 }}
+        animate={{ x: open ? '101%' : 0 }}
+        transition={{ duration: 0.8, ease: paneEase }}
+        onAnimationComplete={() => open && onDone && onDone()}
+      />
+
+      {/* the bright crack down the center */}
+      <motion.span
+        className="preloader__crack"
+        initial={{ scaleY: 0, opacity: 0 }}
+        animate={{
+          scaleY: cracking ? 1 : 0,
+          opacity: open ? 0 : cracking ? 1 : 0,
+        }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+      />
+
+      {/* centered content — animates in, then fades as the crack forms */}
+      <motion.div
+        className="preloader__content"
+        initial={{ opacity: 0, scale: 0.94, filter: 'blur(10px)' }}
+        animate={
+          cracking
+            ? { opacity: 0, scale: 1.06, filter: 'blur(8px)' }
+            : { opacity: 1, scale: 1, filter: 'blur(0px)' }
+        }
+        transition={{ duration: 0.6, ease: CINE_EASE }}
+      >
+        <HourglassLoader />
+        <h1 className="preloader__name">Jaimes Edward Cabante</h1>
+        <p className="preloader__role">Automation &amp; Website Developer</p>
+        <div className="preloader__bar"><span style={{ width: `${pct}%` }} /></div>
+        <span className="preloader__pct">{pct}%</span>
+      </motion.div>
+    </div>
+  )
+}
+
 /* ---------- App ---------- */
 export default function App() {
   const [selected, setSelected] = useState(null)
   const [active, setActive] = useState('work')
+  const [theme, setTheme] = useState(
+    () => (typeof document !== 'undefined' && document.documentElement.dataset.theme) || 'dark',
+  )
+  const toggleTheme = () =>
+    setTheme((t) => {
+      const next = t === 'dark' ? 'light' : 'dark'
+      document.documentElement.dataset.theme = next
+      try { localStorage.setItem('theme', next) } catch {}
+      return next
+    })
   const { scrollYProgress } = useScroll()
+
+  // Intro preloader — first open of the session only (not on refresh), skipped for reduced motion
+  const [intro, setIntro] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+      return !sessionStorage.getItem('introSeen')
+    } catch { return false }
+  })
+  useEffect(() => {
+    if (!intro) return
+    try { sessionStorage.setItem('introSeen', '1') } catch {}
+    document.body.style.overflow = 'hidden'
+    window.scrollTo(0, 0)
+    const fallback = setTimeout(() => setIntro(false), 6500) // safety if onDone never fires
+    return () => { clearTimeout(fallback); document.body.style.overflow = '' }
+  }, [intro])
 
   useEffect(() => {
     document.body.style.overflow = selected ? 'hidden' : ''
@@ -812,10 +1097,11 @@ export default function App() {
 
   return (
     <>
+      <AnimatePresence>{intro && <Preloader key="preloader" onDone={() => setIntro(false)} />}</AnimatePresence>
       <motion.div className="progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
-      <TopBar active={active} />
+      <TopBar active={active} theme={theme} onToggleTheme={toggleTheme} />
       <main>
-        <Hero />
+        <Hero theme={theme} />
         <About />
         <Work onSelect={setSelected} />
         <Skills />
@@ -836,7 +1122,7 @@ export default function App() {
               <span className="eyebrow">Open to work</span>
               <h2>Let&apos;s build<br />something <span className="accent">real.</span></h2>
               <p>
-                I build modern websites and automate the busywork behind them — from the first
+                I build modern websites and automate the busywork behind them, from the first
                 prototype to the live URL. Here&apos;s the full record.
               </p>
               <Magnetic className="btn btn--primary" href={RESUME}>Download Résumé <span aria-hidden="true">↓</span></Magnetic>
