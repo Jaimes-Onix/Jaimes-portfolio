@@ -688,16 +688,15 @@ const MONO_LOGOS = new Set(['github', 'vercel', 'elevenlabsai'])
 /* extra brand logos not in stack-icons.json */
 const HTML5_SVG = '<svg viewBox="0 0 24 24"><path d="M4 2l1.6 18.4L12 22l6.4-1.6L20 2z" fill="#E44D26"/><path d="M12 3.5v16.9l5.1-1.3L18.5 3.5z" fill="#F16529"/><text x="12" y="15.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="9" fill="#fff">5</text></svg>'
 const CSS3_SVG = '<svg viewBox="0 0 24 24"><path d="M4 2l1.6 18.4L12 22l6.4-1.6L20 2z" fill="#1572B6"/><path d="M12 3.5v16.9l5.1-1.3L18.5 3.5z" fill="#33A9DC"/><text x="12" y="15.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="9" fill="#fff">3</text></svg>'
-const GODADDY_SVG = '<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#1BDBDB"/><text x="12" y="17.4" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="15" fill="#16161D">G</text></svg>'
 const PYTHON_SVG = '<svg viewBox="0 0 24 24"><path fill="#3776AB" d="M11.9 0c-1 0-2 .1-2.8.3C6.7.7 6.3 1.6 6.3 3.2v2.1h5.7v.7H4.2c-1.6 0-3 1-3.5 2.8-.5 2-.5 3.3 0 5.4.4 1.6 1.4 2.8 3 2.8h2V12.5c0-1.8 1.6-3.4 3.4-3.4h5.7c1.5 0 2.8-1.3 2.8-2.9V3.2c0-1.5-1.3-2.7-2.8-3C13.9.1 12.9 0 11.9 0zM8.8 1.8c.6 0 1 .5 1 1.1s-.4 1-1 1-1-.4-1-1 .4-1.1 1-1.1z"/><path fill="#FFD43B" d="M18.6 6v2.3c0 1.9-1.6 3.5-3.4 3.5H9.5c-1.5 0-2.8 1.3-2.8 2.9v5.4c0 1.5 1.3 2.4 2.8 2.9 1.8.5 3.5.6 5.7 0 1.4-.4 2.8-1.2 2.8-2.9v-2.1h-5.7v-.7h8.5c1.6 0 2.2-1.1 2.8-2.8.6-1.8.5-3.5 0-5.4-.4-1.6-1.2-2.8-2.8-2.8h-2.2zM15.2 19.8c.6 0 1 .4 1 1s-.4 1.1-1 1.1-1-.5-1-1.1.4-1 1-1z"/></svg>'
 const JAVA_SVG = '<svg viewBox="0 0 24 24"><path fill="#0074BD" d="M8.9 18.2s-.9.6.7.7c1.9.2 2.9.2 5-.2 0 0 .6.4 1.4.7-4.8 2-10.8-.1-7.1-1.2zM8.3 15.6s-1 .8.6.9c2.1.2 3.7.2 6.5-.3 0 0 .4.4 1 .6-5.8 1.7-12.3.1-8.1-1.2z"/><path fill="#EA2D2E" d="M13.1 11.1c1.2 1.3-.3 2.5-.3 2.5s2.9-1.5 1.6-3.4c-1.2-1.8-2.2-2.6 2.9-5.6 0 0-8.1 2-4.2 6.5z"/><path fill="#0074BD" d="M18.5 19.9s.7.6-.8 1c-2.7.8-11.4 1.1-13.8 0-.9-.4.8-.9 1.3-1 .6-.1.9-.1.9-.1-1-.7-6.3 1.4-2.7 2 9.7 1.6 17.7-.7 15.1-1.9zM9.4 12.9s-4.4 1-1.6 1.4c1.2.2 3.6.1 5.8-.1 1.8-.1 3.6-.5 3.6-.5s-.6.3-1.1.6c-4.5 1.2-13.1.6-10.6-.6 2.1-1 3.9-.8 3.9-.8zM16.9 17.1c4.5-2.4 2.4-4.6 1-4.3-.4.1-.5.2-.5.2s.1-.2.4-.3c2.7-1 4.9 2.8-1 4.6 0 0 .1-.1.1-.2z"/><path fill="#EA2D2E" d="M14.4 0s2.5 2.5-2.4 6.3c-3.9 3.1-.9 4.9 0 6.9-2.3-2.1-4-3.9-2.9-5.6C10.8 5.1 15.4 3.9 14.4 0z"/><path fill="#0074BD" d="M9.9 23.9c4.3.3 10.9-.2 11.1-2.2 0 0-.3.8-3.6 1.4-3.7.7-8.3.6-11 .2 0 0 .6.5 3.5.6z"/></svg>'
-const STACK_ICONS = { ...STACK_SVG, html5: HTML5_SVG, css3: CSS3_SVG, godaddy: GODADDY_SVG, python: PYTHON_SVG, java: JAVA_SVG }
+const STACK_ICONS = { ...STACK_SVG, html5: HTML5_SVG, css3: CSS3_SVG, python: PYTHON_SVG, java: JAVA_SVG }
 const STACK = [
   { cat: 'Frontend', items: [['React', 'react'], ['HTML5', 'html5'], ['CSS3', 'css3'], ['Tailwind', 'tailwindcss'], ['Framer Motion', 'framer']] },
   { cat: 'Backend & Data', items: [['Spring Boot', 'spring'], ['Supabase', 'supabase'], ['Firebase', 'firebase']] },
   { cat: 'Automation & AI', items: [['n8n', 'n8n'], ['Make', '/images/make.png'], ['GoHighLevel', '/images/gohighlevel.svg'], ['Claude Code', 'claude']] },
   { cat: 'Languages', items: [['TypeScript', 'typescript'], ['JavaScript', 'js'], ['Java', 'java'], ['Python', 'python']] },
-  { cat: 'Deployment & Hosting', items: [['Vercel', 'vercel'], ['GoDaddy', 'godaddy'], ['Git / GitHub', 'github']] },
+  { cat: 'Deployment & Hosting', items: [['Vercel', 'vercel'], ['GoDaddy', '/images/GoDaddy-Logo.png'], ['Git / GitHub', 'github']] },
   {
     cat: 'AIGC (AI Generated Content)',
     wide: true,
