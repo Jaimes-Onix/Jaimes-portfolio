@@ -579,6 +579,7 @@ function AboutIcon({ name }) {
   const p = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
   if (name === 'bolt') return <svg {...p}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" /></svg>
   if (name === 'code') return <svg {...p}><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" /></svg>
+  if (name === 'chat') return <svg {...p}><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5Z" /><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" /></svg>
   if (name === 'rocket') return <svg {...p}><path d="M5 14c-2 1-2 5-2 5s4 0 5-2M12 15l-3-3a14 14 0 0 1 7-9c2 0 3 1 3 3a14 14 0 0 1-9 7M9 12l-3 .5M12 15l-.5 3" /></svg>
   if (name === 'server') return <svg {...p}><rect x="3" y="4" width="18" height="7" rx="1.6" /><rect x="3" y="13" width="18" height="7" rx="1.6" /><path d="M7 7.5h.01M7 16.5h.01" /></svg>
   if (name === 'spark') return <svg {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" /></svg>
@@ -657,6 +658,7 @@ const SKILLS2 = [
   { icon: 'layout', title: 'Web development', desc: 'Responsive, accessible sites in React, built on reusable design systems with tasteful motion.' },
   { icon: 'server', title: 'Backend & APIs', desc: 'REST APIs, authentication, and databases with Spring Boot, Supabase, and Firebase.' },
   { icon: 'bolt', title: 'Automation', desc: 'n8n workflows and LLM and RAG pipelines that quietly remove manual busywork.' },
+  { icon: 'chat', title: 'AI chatbots', desc: 'RAG-powered assistants over a knowledge base — for support, lead capture, and answering questions (like the one on this site).' },
   { icon: 'spark', title: 'AI-generated media', desc: 'Images, video, and voice produced with AIGC tools and wired into real products.' },
   { icon: 'rocket', title: 'Ship to production', desc: 'From the first prototype to a live URL on Vercel, owned end to end.' },
   { icon: 'code', title: 'Clean, maintainable code', desc: 'Readable components, sensible structure, and version control on every project.' },
