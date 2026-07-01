@@ -11,6 +11,7 @@ import {
   animate,
 } from 'framer-motion'
 import STACK_SVG from './stack-icons.json'
+import ChatBot from './ChatBot.jsx'
 
 const RESUME = '/resume.pdf'
 const RESUME_FILENAME = 'Jaimes-Cabante-Resume.pdf'
@@ -210,7 +211,7 @@ function Reveal({ children, delay = 0, y = 40, className, style }) {
 }
 
 /* Magnetic CTA — pointer-following spring; plain link under reduced motion */
-function Magnetic({ className, href, children }) {
+function Magnetic({ className, href, children, onOpen }) {
   const reduce = useReducedMotion()
   const ref = useRef(null)
   const x = useMotionValue(0)
@@ -223,6 +224,7 @@ function Magnetic({ className, href, children }) {
     target: '_blank',
     rel: 'noopener noreferrer',
     download: RESUME_FILENAME,
+    onClick: onOpen ? (e) => { e.preventDefault(); onOpen() } : undefined,
   }
   if (reduce) {
     return <a className={className} {...linkProps}>{children}</a>
@@ -248,9 +250,16 @@ function Magnetic({ className, href, children }) {
   )
 }
 
-function ResumeLink({ className = 'btn btn--ghost', children }) {
+function ResumeLink({ className = 'btn btn--ghost', children, onOpen }) {
   return (
-    <a className={className} href={RESUME} target="_blank" rel="noopener noreferrer" download={RESUME_FILENAME}>
+    <a
+      className={className}
+      href={RESUME}
+      target="_blank"
+      rel="noopener noreferrer"
+      download={RESUME_FILENAME}
+      onClick={onOpen ? (e) => { e.preventDefault(); onOpen() } : undefined}
+    >
       {children || <>Download Résumé <span aria-hidden="true">↓</span></>}
     </a>
   )
@@ -577,7 +586,7 @@ function AboutIcon({ name }) {
   return <svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>
 }
 
-function About() {
+function About({ onResume }) {
   return (
     <section id="about" className="section about2">
       <div className="wrap">
@@ -634,7 +643,7 @@ function About() {
             </div>
 
             <div className="about2__cta">
-              <ResumeLink className="btn btn--primary" />
+              <ResumeLink className="btn btn--primary" onOpen={onResume} />
             </div>
           </Reveal>
         </div>
@@ -824,7 +833,7 @@ function Education() {
             <div className="degree__text">
               <span className="degree__k">Degree</span>
               <h3 className="degree__title">BS in Information Technology (BSIT)</h3>
-              <p className="degree__sub">Cebu Institute of Technology – University · 2020–2025</p>
+              <p className="degree__sub">Cebu Institute of Technology – University · 2020–2024</p>
             </div>
           </div>
         </Reveal>
@@ -930,6 +939,70 @@ function Modal({ project, onClose }) {
             </div>
           )}
         </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+/* ---------- Résumé modal (full preview + side download) ---------- */
+function ResumeModal({ onClose }) {
+  const reduce = useReducedMotion()
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <motion.div
+      className="rmodal"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Résumé preview"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+    >
+      <motion.div
+        className="rmodal__panel"
+        onClick={(e) => e.stopPropagation()}
+        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 22, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={reduce ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.985 }}
+        transition={{ duration: 0.32, ease: EASE }}
+      >
+        <button className="rmodal__close" onClick={onClose} aria-label="Close résumé">✕</button>
+
+        <div className="rmodal__doc">
+          <iframe
+            className="rmodal__frame"
+            src={`${RESUME}#view=FitH&toolbar=0&navpanes=0`}
+            title="Jaimes Edward Cabante — Résumé"
+          />
+        </div>
+
+        <aside className="rmodal__side">
+          <span className="eyebrow eyebrow--muted">Résumé</span>
+          <h3 className="rmodal__title">Jaimes Edward Cabante</h3>
+          <p className="rmodal__sub">Automation &amp; Website Developer · Cebu, PH</p>
+          <div className="rmodal__actions">
+            <a className="btn btn--primary" href={RESUME} download={RESUME_FILENAME}>
+              Download PDF <span aria-hidden="true">↓</span>
+            </a>
+            <a className="btn btn--ghost" href={RESUME} target="_blank" rel="noopener noreferrer">
+              Open in new tab <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <p className="rmodal__hint">
+            Preview not showing? <a href={RESUME} target="_blank" rel="noopener noreferrer">Open the PDF ↗</a>
+          </p>
+        </aside>
       </motion.div>
     </motion.div>
   )
@@ -1064,6 +1137,7 @@ function Preloader({ onDone }) {
 /* ---------- App ---------- */
 export default function App() {
   const [selected, setSelected] = useState(null)
+  const [resumeOpen, setResumeOpen] = useState(false)
   const [active, setActive] = useState('work')
   const [theme, setTheme] = useState(
     () => (typeof document !== 'undefined' && document.documentElement.dataset.theme) || 'dark',
@@ -1131,7 +1205,7 @@ export default function App() {
       <TopBar active={active} theme={theme} onToggleTheme={toggleTheme} />
       <main>
         <Hero theme={theme} start={!intro} />
-        <About />
+        <About onResume={() => setResumeOpen(true)} />
         <Work onSelect={setSelected} />
         <Skills />
         <TechStack />
@@ -1142,6 +1216,14 @@ export default function App() {
       <AnimatePresence>
         {selected && <Modal key="modal" project={selected} onClose={() => setSelected(null)} />}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {resumeOpen && <ResumeModal key="resume" onClose={() => setResumeOpen(false)} />}
+      </AnimatePresence>
+
+      {/* Chat assistant — fixed overlay; kept before the footer so the Arca
+          attribution stays the final element in the document. */}
+      <ChatBot />
 
       {/* ===== FOOTER ===== */}
       <footer className="footer">
@@ -1154,7 +1236,7 @@ export default function App() {
                 I build modern websites and automate the busywork behind them, from the first
                 prototype to the live URL. Here&apos;s the full record.
               </p>
-              <Magnetic className="btn btn--primary" href={RESUME}>Download Résumé <span aria-hidden="true">↓</span></Magnetic>
+              <Magnetic className="btn btn--primary" href={RESUME} onOpen={() => setResumeOpen(true)}>Download Résumé <span aria-hidden="true">↓</span></Magnetic>
             </div>
           </Reveal>
 
@@ -1176,7 +1258,7 @@ export default function App() {
               <span className="footer__nav-label">More</span>
               <a href="#skills">Skills</a>
               <a href="#experience">Experience</a>
-              <a href={RESUME} target="_blank" rel="noopener noreferrer" download={RESUME_FILENAME}>Résumé</a>
+              <a href={RESUME} onClick={(e) => { e.preventDefault(); setResumeOpen(true) }} target="_blank" rel="noopener noreferrer" download={RESUME_FILENAME}>Résumé</a>
             </nav>
           </div>
 
