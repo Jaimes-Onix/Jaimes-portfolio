@@ -16,12 +16,14 @@ import ChatBot from './ChatBot.jsx'
 const RESUME = '/resume.pdf'
 const RESUME_FILENAME = 'Jaimes-Cabante-Resume.pdf'
 const EASE = [0.22, 1, 0.36, 1]
+const AUTOMATIONS_ROUTE = '#/automations'
 
 /* ---------- Data ---------- */
 const NAV = [
   { name: 'About', href: '#about' },
   { name: 'Work', href: '#work' },
   { name: 'Skills', href: '#skills' },
+  { name: 'Automation', href: '#automation' },
   { name: 'Experience', href: '#experience' },
 ]
 
@@ -584,6 +586,8 @@ function AboutIcon({ name }) {
   if (name === 'server') return <svg {...p}><rect x="3" y="4" width="18" height="7" rx="1.6" /><rect x="3" y="13" width="18" height="7" rx="1.6" /><path d="M7 7.5h.01M7 16.5h.01" /></svg>
   if (name === 'spark') return <svg {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" /></svg>
   if (name === 'layout') return <svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11" /></svg>
+  if (name === 'mail') return <svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>
+  if (name === 'bell') return <svg {...p}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.5 20.5a2 2 0 0 1-3 0" /></svg>
   return <svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>
 }
 
@@ -688,6 +692,242 @@ function Skills() {
             ))}
           </div>
         </Reveal>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Workflow automation (n8n-style flow board) ---------- */
+const FLOW = [
+  { id: 'trigger', icon: 'bolt', kind: 'Trigger', title: 'New lead', sub: 'Webhook', left: '1%', cy: '50%', out: true },
+  { id: 'ai', icon: 'spark', kind: 'AI Agent', title: 'Qualify lead', sub: 'LLM + RAG', left: '30%', cy: '50%', in: true, out: true },
+  { id: 'crm', icon: 'user', kind: 'CRM', title: 'Create contact', sub: 'GoHighLevel', left: '72%', cy: '17%', in: true },
+  { id: 'email', icon: 'mail', kind: 'Email', title: 'Auto reply', sub: 'Gmail', left: '72%', cy: '50%', in: true },
+  { id: 'notify', icon: 'bell', kind: 'Notify', title: 'Team alert', sub: 'Slack', left: '72%', cy: '83%', in: true },
+]
+
+/* connector paths in a 0..100 canvas (preserveAspectRatio="none", non-scaling stroke) */
+const WIRES = [
+  'M22,50 C26,50 27,50 30,50',
+  'M51,50 C61,50 62,17 72,17',
+  'M51,50 C61,50 62,50 72,50',
+  'M51,50 C61,50 62,83 72,83',
+]
+
+function WorkflowNode({ node, i }) {
+  return (
+    <span className="wf__node" style={{ left: node.left, top: node.cy }}>
+      <Reveal
+        className={`wf__card${node.in ? ' has-in' : ''}${node.out ? ' has-out' : ''}`}
+        y={10}
+        delay={0.05 + i * 0.08}
+      >
+        <span className="wf__kind">{node.kind}</span>
+        <span className="wf__row">
+          <span className="wf__ic"><AboutIcon name={node.icon} /></span>
+          <span className="wf__meta">
+            <span className="wf__title">{node.title}</span>
+            <span className="wf__sub">{node.sub}</span>
+          </span>
+        </span>
+      </Reveal>
+    </span>
+  )
+}
+
+/* Illustrative animated flow board — shown when an entry has no screenshot yet */
+function WorkflowBoard() {
+  return (
+    <div className="wf__canvas">
+      <svg className="wf__wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {WIRES.map((d, i) => (
+          <g key={i}>
+            <path className="wf__wire" d={d} pathLength="100" />
+            <path className="wf__pulse" d={d} pathLength="100" style={{ animationDelay: `${i * 0.55}s` }} />
+          </g>
+        ))}
+      </svg>
+      {FLOW.map((node, i) => <WorkflowNode key={node.id} node={node} i={i} />)}
+    </div>
+  )
+}
+
+/* n8n editor window wrapping a real screenshot (falls back to the board) */
+function ShotFrame({ file, img, alt }) {
+  const [ok, setOk] = useState(Boolean(img))
+  return (
+    <figure className="wf">
+      <div className="wf__bar">
+        <span className="wf__lights" aria-hidden="true"><i /><i /><i /></span>
+        <span className="wf__barname">{file}</span>
+        <span className="wf__brand" aria-hidden="true">n8n</span>
+      </div>
+      {img && ok ? (
+        <div className="wf__shot">
+          <img src={img} alt={alt} loading="lazy" onError={() => setOk(false)} />
+        </div>
+      ) : (
+        <WorkflowBoard />
+      )}
+    </figure>
+  )
+}
+
+/* Automation platforms. Each square links to its own library (#/automations/<slug>). */
+const PLATFORMS = [
+  { slug: 'n8n', name: 'n8n', icon: STACK_SVG.n8n, sub: 'Developer-grade workflows' },
+  { slug: 'make', name: 'Make', img: '/images/make.png', sub: 'Fast visual scenarios' },
+  { slug: 'ghl', name: 'GoHighLevel', img: '/images/gohighlevel.svg', sub: 'CRM and marketing automation' },
+]
+
+/* Per-platform automation libraries.
+   TO ADD ONE: drop a screenshot into public/images/, then add an item to the right
+   array below: { file, title, desc, img: '/images/your-shot.png' }.
+   Copy an item to add more. Items left with img: null show a placeholder frame. */
+const LIBRARY = {
+  n8n: [
+    {
+      file: 'lead-qualification.flow',
+      title: 'Lead qualification',
+      desc: 'A new form lead is qualified by an AI step, then created in the CRM, sent an auto reply, and posted to the team channel.',
+      img: null,
+    },
+  ],
+  make: [
+    {
+      file: 'form-to-sheet.scenario',
+      title: 'Form to sheet sync',
+      desc: 'Form submissions are cleaned and appended to a spreadsheet, with the team notified on each new row.',
+      img: null,
+    },
+  ],
+  ghl: [
+    {
+      file: 'new-lead-nurture',
+      title: 'New lead nurture',
+      desc: 'New contacts drop into a follow-up sequence with tasks and reminders, so no lead goes cold.',
+      img: null,
+    },
+  ],
+}
+
+const platformLogo = (p) =>
+  p.img ? <img src={p.img} alt="" /> : <span dangerouslySetInnerHTML={{ __html: p.icon }} />
+
+/* platform-branded editor window: shows a screenshot, or a logo placeholder until one is added */
+function PlatformFrame({ meta, file, img, alt }) {
+  const [ok, setOk] = useState(Boolean(img))
+  return (
+    <figure className="wf">
+      <div className="wf__bar">
+        <span className="wf__lights" aria-hidden="true"><i /><i /><i /></span>
+        <span className="wf__barname">{file}</span>
+        <span className="wf__brand" aria-hidden="true">{meta.name}</span>
+      </div>
+      {img && ok ? (
+        <div className="wf__shot">
+          <img src={img} alt={alt} loading="lazy" onError={() => setOk(false)} />
+        </div>
+      ) : (
+        <div className="wf__ph"><span className="wf__ph-logo">{platformLogo(meta)}</span></div>
+      )}
+    </figure>
+  )
+}
+
+/* index view — the three platform squares */
+function AutomationsIndex() {
+  return (
+    <>
+      <Reveal>
+        <div className="sec-head">
+          <div>
+            <span className="eyebrow">Automation</span>
+            <h2 className="h2 sec-head__title">Automations &amp; workflows.</h2>
+          </div>
+          <p className="lead">The platforms I build my automations on. Open one to see the flows I&apos;ve built there.</p>
+        </div>
+      </Reveal>
+      <Reveal className="platgrid">
+        {PLATFORMS.map((p) => (
+          <a key={p.slug} className="platcard" href={`${AUTOMATIONS_ROUTE}/${p.slug}`}>
+            <span className="platcard__logo">{platformLogo(p)}</span>
+            <span className="platcard__name">{p.name}</span>
+            <span className="platcard__sub">{p.sub}</span>
+            <span className="platcard__go" aria-hidden="true">View library →</span>
+          </a>
+        ))}
+      </Reveal>
+    </>
+  )
+}
+
+/* per-platform library — a grid of automations, each a screenshot + write-up */
+function PlatformLibrary({ slug }) {
+  const meta = PLATFORMS.find((p) => p.slug === slug)
+  const items = LIBRARY[slug] || []
+  return (
+    <>
+      <Reveal>
+        <a className="lib-back" href={AUTOMATIONS_ROUTE}><span aria-hidden="true">←</span> All platforms</a>
+        <div className="sec-head">
+          <div>
+            <span className="eyebrow">Automation library</span>
+            <h2 className="h2 sec-head__title">{meta.name} automations.</h2>
+          </div>
+          <p className="lead">{meta.sub}. The flows I&apos;ve built on {meta.name}, with a short write-up on each.</p>
+        </div>
+      </Reveal>
+      {items.length ? (
+        <div className="libgrid">
+          {items.map((it, i) => (
+            <Reveal key={it.file} className="libcard" delay={i * 0.05}>
+              <PlatformFrame meta={meta} file={it.file} img={it.img} alt={`${it.title} in ${meta.name}`} />
+              <h3 className="libcard__title">{it.title}</h3>
+              <p className="libcard__desc">{it.desc}</p>
+            </Reveal>
+          ))}
+        </div>
+      ) : (
+        <Reveal className="lib-empty">
+          <PlatformFrame meta={meta} file={slug} img={null} alt="" />
+          <p className="lib-empty__note">Automations coming soon.</p>
+        </Reveal>
+      )}
+    </>
+  )
+}
+
+/* home-page teaser — a preview plus a button through to the full automations page */
+function Automation() {
+  return (
+    <section id="automation" className="section">
+      <div className="wrap">
+        <Reveal>
+          <div className="sec-head">
+            <div>
+              <span className="eyebrow">Automation</span>
+              <h2 className="h2 sec-head__title">Workflows that run themselves.</h2>
+            </div>
+            <p className="lead">I wire up n8n flows that connect your tools, drop in an AI step where it earns its place, and take the manual busywork off your plate.</p>
+          </div>
+        </Reveal>
+
+        <div className="autoflows">
+          <Reveal className="autoflow">
+            <div className="autoflow__media">
+              <ShotFrame file="lead-qualification.flow" img={null} alt="Example n8n workflow" />
+            </div>
+            <div className="autoflow__body">
+              <span className="eyebrow eyebrow--muted">Live example</span>
+              <h3 className="autoflow__title">A look inside my n8n flows.</h3>
+              <p className="autoflow__desc">Real workflows that qualify leads, answer questions, and move data between tools, each with a short write-up. Take a look at the full set.</p>
+              <a className="btn btn--primary autoflow__cta" href={AUTOMATIONS_ROUTE}>
+                View all automations <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   )
@@ -1136,8 +1376,129 @@ function Preloader({ onDone }) {
   )
 }
 
-/* ---------- App ---------- */
-export default function App() {
+/* ---------- Site footer (shared across pages; Arca stays the final element) ---------- */
+function SiteFooter({ onResume }) {
+  return (
+    <footer className="footer">
+      <div className="wrap">
+        <Reveal>
+          <div className="footer__cta">
+            <span className="eyebrow">Open to work</span>
+            <h2>Let&apos;s build<br />something <span className="accent">real.</span></h2>
+            <p>
+              I build modern websites and automate the busywork behind them, from the first
+              prototype to the live URL. Here&apos;s the full record.
+            </p>
+            <Magnetic className="btn btn--primary" href={RESUME} onOpen={onResume}>Download Résumé <span aria-hidden="true">↓</span></Magnetic>
+          </div>
+        </Reveal>
+
+        <div className="footer__cols">
+          <div className="footer__brand">
+            <div className="footer__name">Jaimes Edward Cabante</div>
+            <p className="footer__tagline">
+              Automation &amp; Website Developer based in Cebu, PH. I build modern websites
+              and automate the work behind them.
+            </p>
+          </div>
+          <nav className="footer__nav" aria-label="Menu">
+            <span className="footer__nav-label">Menu</span>
+            <a href="#top">Home</a>
+            <a href="#work">Work</a>
+            <a href="#about">About</a>
+          </nav>
+          <nav className="footer__nav" aria-label="More">
+            <span className="footer__nav-label">More</span>
+            <a href="#skills">Skills</a>
+            <a href={AUTOMATIONS_ROUTE}>Automations</a>
+            <a href={RESUME} onClick={(e) => { e.preventDefault(); onResume() }} target="_blank" rel="noopener noreferrer" download={RESUME_FILENAME}>Résumé</a>
+          </nav>
+        </div>
+
+        <div className="footer__legal">
+          <span>© 2026 Jaimes Edward Cabante</span>
+          <span>Automation &amp; Website Developer · Cebu, PH</span>
+        </div>
+
+        {/* Arca attribution — REQUIRED, final element on the page, links to arca.ph */}
+        <a className="footer__arca" href="https://arca.ph" target="_blank" rel="noopener noreferrer" aria-label="Made for Arca.ph">
+          <img src="/images/arca-logo.png" alt="Arca" />
+          <span>Made for Arca.ph</span>
+        </a>
+      </div>
+    </footer>
+  )
+}
+
+/* ---------- Automations page (separate route: #/automations) ---------- */
+function BackBar({ theme, onToggleTheme }) {
+  return (
+    <header className="topbar is-stuck" id="topbar">
+      <div className="wrap">
+        <div className="topbar__inner">
+          <a className="brand" href="#top" aria-label="Jaimes Cabante, back to portfolio">
+            <span className="brand__dot" />
+            Jaimes Cabante
+          </a>
+          <nav className="navlinks" aria-label="Back">
+            <a href="#top">← Back to portfolio</a>
+          </nav>
+          <div className="topbar__right">
+            <button
+              type="button"
+              className="themebtn"
+              onClick={onToggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title="Toggle light / dark mode"
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              <span className="themebtn__label">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function AutomationsPage({ platform }) {
+  const [resumeOpen, setResumeOpen] = useState(false)
+  const [theme, setTheme] = useState(
+    () => (typeof document !== 'undefined' && document.documentElement.dataset.theme) || 'dark',
+  )
+  const toggleTheme = () =>
+    setTheme((t) => {
+      const next = t === 'dark' ? 'light' : 'dark'
+      document.documentElement.dataset.theme = next
+      try { localStorage.setItem('theme', next) } catch {}
+      return next
+    })
+  const active = platform && PLATFORMS.some((p) => p.slug === platform) ? platform : null
+
+  return (
+    <>
+      <BackBar theme={theme} onToggleTheme={toggleTheme} />
+      <main>
+        <section className="section autopage">
+          <div className="wrap">
+            {active ? <PlatformLibrary slug={active} /> : <AutomationsIndex />}
+          </div>
+        </section>
+      </main>
+
+      {/* Chat assistant kept before the footer so Arca stays the final element. */}
+      <ChatBot />
+      <SiteFooter onResume={() => setResumeOpen(true)} />
+
+      <AnimatePresence>
+        {resumeOpen && <ResumeModal key="resume" onClose={() => setResumeOpen(false)} />}
+      </AnimatePresence>
+    </>
+  )
+}
+
+/* ---------- Home page ---------- */
+function HomePage() {
   const [selected, setSelected] = useState(null)
   const [resumeOpen, setResumeOpen] = useState(false)
   const [active, setActive] = useState('work')
@@ -1184,7 +1545,7 @@ export default function App() {
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
 
-    const ids = ['work', 'about', 'skills', 'experience']
+    const ids = ['about', 'work', 'skills', 'automation', 'experience']
     const sections = ids.map((id) => document.getElementById(id)).filter(Boolean)
     let spy
     if ('IntersectionObserver' in window && sections.length) {
@@ -1210,6 +1571,7 @@ export default function App() {
         <About onResume={() => setResumeOpen(true)} />
         <Work onSelect={setSelected} />
         <Skills />
+        <Automation />
         <TechStack />
         <Experience />
         <Education />
@@ -1227,55 +1589,29 @@ export default function App() {
           attribution stays the final element in the document. */}
       <ChatBot />
 
-      {/* ===== FOOTER ===== */}
-      <footer className="footer">
-        <div className="wrap">
-          <Reveal>
-            <div className="footer__cta">
-              <span className="eyebrow">Open to work</span>
-              <h2>Let&apos;s build<br />something <span className="accent">real.</span></h2>
-              <p>
-                I build modern websites and automate the busywork behind them, from the first
-                prototype to the live URL. Here&apos;s the full record.
-              </p>
-              <Magnetic className="btn btn--primary" href={RESUME} onOpen={() => setResumeOpen(true)}>Download Résumé <span aria-hidden="true">↓</span></Magnetic>
-            </div>
-          </Reveal>
-
-          <div className="footer__cols">
-            <div className="footer__brand">
-              <div className="footer__name">Jaimes Edward Cabante</div>
-              <p className="footer__tagline">
-                Automation &amp; Website Developer based in Cebu, PH. I build modern websites
-                and automate the work behind them.
-              </p>
-            </div>
-            <nav className="footer__nav" aria-label="Menu">
-              <span className="footer__nav-label">Menu</span>
-              <a href="#top">Home</a>
-              <a href="#work">Work</a>
-              <a href="#about">About</a>
-            </nav>
-            <nav className="footer__nav" aria-label="More">
-              <span className="footer__nav-label">More</span>
-              <a href="#skills">Skills</a>
-              <a href="#experience">Experience</a>
-              <a href={RESUME} onClick={(e) => { e.preventDefault(); setResumeOpen(true) }} target="_blank" rel="noopener noreferrer" download={RESUME_FILENAME}>Résumé</a>
-            </nav>
-          </div>
-
-          <div className="footer__legal">
-            <span>© 2026 Jaimes Edward Cabante</span>
-            <span>Automation &amp; Website Developer · Cebu, PH</span>
-          </div>
-
-          {/* Arca attribution — REQUIRED, final element on the page, links to arca.ph */}
-          <a className="footer__arca" href="https://arca.ph" target="_blank" rel="noopener noreferrer" aria-label="Made for Arca.ph">
-            <img src="/images/arca-logo.png" alt="Arca" />
-            <span>Made for Arca.ph</span>
-          </a>
-        </div>
-      </footer>
+      <SiteFooter onResume={() => setResumeOpen(true)} />
     </>
   )
+}
+
+/* ---------- Router (lightweight hash routing; no server config needed) ---------- */
+function parseRoute(hash) {
+  const m = /^#\/automations(?:\/([a-z0-9-]+))?$/.exec(hash || '')
+  if (m) return { page: 'automations', platform: m[1] || null }
+  return { page: 'home', platform: null }
+}
+export default function App() {
+  const [route, setRoute] = useState(() => parseRoute(typeof window !== 'undefined' ? window.location.hash : ''))
+  useEffect(() => {
+    const onHash = () => {
+      const next = parseRoute(window.location.hash)
+      setRoute((prev) => {
+        if (prev.page !== next.page || prev.platform !== next.platform) window.scrollTo(0, 0)
+        return next
+      })
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+  return route.page === 'automations' ? <AutomationsPage platform={route.platform} /> : <HomePage />
 }
