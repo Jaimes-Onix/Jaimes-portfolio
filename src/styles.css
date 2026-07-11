@@ -1919,14 +1919,15 @@
   .wf__barname { font-family: var(--font-body); font-size: 13px; color: var(--muted); letter-spacing: 0.01em; }
   .wf__brand {
     margin-left: auto;
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-    color: var(--accent-ink);
-    padding: 3px 10px;
-    border-radius: var(--r-pill);
-    background: var(--accent-tint);
+    display: inline-flex;
+    align-items: center;
+  }
+  .wf__brand span { display: inline-flex; align-items: center; }
+  .wf__brand svg,
+  .wf__brand img {
+    height: 20px !important;
+    width: auto !important;
+    display: block;
   }
   .wf__canvas {
     position: relative;
@@ -2121,6 +2122,27 @@
     grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
     gap: clamp(22px, 2.6vw, 38px);
   }
+  .libgrid__wide { grid-column: 1 / -1; }
+  .libgrid__wide .libcard__desc { max-width: 64ch; }
+  .libcard {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .libcard .wf { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+  .libcard:hover .wf,
+  .libcard:focus-visible .wf {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: var(--shadow-md);
+  }
   .libcard__title {
     font-family: var(--font-display);
     font-weight: 700;
@@ -2130,6 +2152,95 @@
     margin-top: 18px;
   }
   .libcard__desc { margin-top: 8px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+  .libcard__more {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-ink);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .libcard:hover .libcard__more,
+  .libcard:focus-visible .libcard__more { opacity: 1; transform: translateX(0); }
+
+  /* automation modal — description left, screenshot right */
+  .amodal {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: clamp(14px, 4vw, 48px);
+    background: rgba(0, 0, 0, 0.72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .amodal__panel {
+    position: relative;
+    width: min(1200px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+  }
+  .amodal__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 14px;
+    display: grid;
+    place-items: center;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .amodal__close:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .amodal__grid {
+    padding: clamp(24px, 3vw, 44px);
+  }
+  .amodal__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(26px, 3vw, 40px);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-top: 14px;
+  }
+  .amodal__sub {
+    display: block;
+    margin: 22px 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  .amodal__text {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.75;
+    max-width: 92ch;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+  }
+  .amodal__text .hl {
+    background: none;
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  /* big picture up top, details below */
+  .amodal__media { margin: 24px 0 10px; }
   .wf__ph {
     aspect-ratio: 16 / 10;
     display: grid;

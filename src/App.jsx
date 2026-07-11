@@ -760,7 +760,7 @@ function ShotFrame({ file, img, alt }) {
       <div className="wf__bar">
         <span className="wf__lights" aria-hidden="true"><i /><i /><i /></span>
         <span className="wf__barname">{file}</span>
-        <span className="wf__brand" aria-hidden="true">n8n</span>
+        <span className="wf__brand" aria-hidden="true" dangerouslySetInnerHTML={{ __html: STACK_SVG.n8n }} />
       </div>
       {img && ok ? (
         <div className="wf__shot">
@@ -781,32 +781,124 @@ const PLATFORMS = [
 ]
 
 /* Per-platform automation libraries.
-   TO ADD ONE: drop a screenshot into public/images/, then add an item to the right
-   array below: { file, title, desc, img: '/images/your-shot.png' }.
+   TO ADD ONE: drop a screenshot into the matching folder under
+   public/images/automations/ (n8n | make | gohighlevel), then add an item below.
+   - desc:   the short line shown on the card
+   - detail: the full write-up shown in the modal (falls back to desc)
+   - result: optional "Result" paragraph shown in the modal
    Copy an item to add more. Items left with img: null show a placeholder frame. */
 const LIBRARY = {
   n8n: [
     {
-      file: 'lead-qualification.flow',
-      title: 'Lead qualification',
-      desc: 'A new form lead is qualified by an AI step, then created in the CRM, sent an auto reply, and posted to the team channel.',
-      img: null,
+      file: 'Smart lead sorter',
+      title: 'Smart lead sorter',
+      desc: 'A form captures leads and an IF node routes each one into the right Google Sheet.',
+      detail:
+        'My first n8n workflow: a Form Trigger collects a name, an email, and an interest dropdown (Hot lead or Just browsing). When someone submits, an IF node checks whether the interest is "Hot lead." Hot leads are routed down the true path and appended to a dedicated Hot Leads tab in the n8n First Automation Google Sheet, while everyone else follows the false path and is appended to the main sheet. It combines the three core automation moves: a trigger (the form), an action (append a row to Google Sheets), and a branch (the IF decision).',
+      result:
+        'Submitting the form writes each lead into the *correct place* in the spreadsheet: a submission marked "Hot lead" lands in the *Hot Leads tab*, and a "Just browsing" submission lands in the *main sheet*. Both IF outputs are wired, each run appears on the *Executions page*, and the workflow was built and tested entirely on the *Test URL* and left *unpublished*.',
+      img: '/images/automations/n8n/smart-lead-sorter.png',
+    },
+    {
+      file: 'AI Builder Lead Desk',
+      title: 'AI Builder Lead Desk',
+      desc: 'The lead sorter rebuilt from a single AI prompt, with a Discord alert for hot leads.',
+      detail:
+        'AI Builder Lead Desk is the same lead-sorting automation as the hand build, but drafted from a single plain-English prompt using n8n\'s built-in Build with AI. A Form Trigger collects a name, an email, and an Interest dropdown (Hot lead or Just browsing). An IF node checks whether the interest is "Hot lead." Hot leads take the true path, get appended to a Hot Leads Google Sheet, and are pushed to a Discord channel via webhook with an alert reading "Hot lead: [Name] ([Email]). Call them now." Browsing leads take the false path and are appended to an All Leads sheet. The AI generates the full structure (trigger, IF branch, two Google Sheets nodes, and the Discord alert), while the human fills in the private pieces (the Google credential, the two sheets, and the Discord webhook URL) and validates every node.',
+      result:
+        'From one prompt, n8n\'s AI builder drafted the *complete workflow* on the canvas. After connecting the Google credential, selecting the Hot Leads and All Leads sheets, and adding the Discord webhook, *both paths tested correctly*: a "Hot lead" submission landed in the Hot Leads sheet and *pinged the Discord channel*, while a "Just browsing" submission landed in the All Leads sheet. Comparing it to the hand build confirmed the AI got the overall shape and nodes right, but *left credentials and destinations blank* and needed a human to review each node and fix what was off. The AI builder is a *fast way to start a draft*, not a *finished, production-ready product*.',
+      img: '/images/automations/n8n/ai-builder-lead-desk.png',
+    },
+    {
+      file: 'MCP Lead Desk',
+      title: 'MCP Lead Desk',
+      desc: 'The same lead sorter, drafted a third way by Claude Code over the n8n MCP while you verify.',
+      detail:
+        'MCP Lead Desk is the same lead-sorting automation built a third way, drafted by Claude Code through the n8n MCP connection while you direct and verify. A Form Trigger captures a name, an email, and an Interest dropdown (Hot lead or Just browsing). An IF node checks whether the interest is "Hot lead," reading {{ $json.Interest }}. Hot leads take the true path, get appended to the Hot Leads Google Sheet, and are pushed to a Discord channel via webhook with an alert reading "Hot lead: [Name] ([Email]). Call them now." Browsing leads take the false path and are appended to the All Leads sheet. Claude Code reads the real node docs and drafts all five nodes turn by turn, while the human supplies the private pieces (the Google credential, the two sheet pickers, and the Discord webhook URL) and runs the verify loop node by node.',
+      result:
+        'From one prompt, Claude Code drafted the *complete five-node workflow*: a Form Trigger into an IF with two paths, a Google Sheets Append Row and Discord alert on the true side, and a Google Sheets Append Row on the false side. After setting the Document and Sheet pickers, confirming the Google credential, checking the IF condition and the Name to Name and Email to Email mappings, and adding the Discord webhook, *both paths tested correctly*: a "Hot lead" submission landed a row in Hot Leads and *pinged the Discord channel*, while a "Just browsing" submission landed a row in All Leads and *Discord stayed quiet*. The run was confirmed on the Executions page, at least one thing left empty by the draft was fixed, and the workflow was *left unpublished*, reinforcing the core habit: *you direct, Claude Code drafts, you verify*.',
+      img: '/images/automations/n8n/mcp-lead-desk.png',
+    },
+    {
+      file: 'Outside Leads - Leads In',
+      title: 'Outside Leads - Leads In',
+      desc: 'A form lead is enriched by enrich.so, gated for real people, then created in GHL with an opportunity in the pipeline.',
+      detail:
+        'This workflow rebuilds the Day-2 Leads In job in n8n. A Form Trigger captures Name, Email (required), Phone, and Message. An HTTP Request node sends the email to enrich.so (reverse lookup), returning facts like first name, last name, headline, company, and LinkedIn URL. An IF node gates the flow, continuing only when the enrich result data.displayName is not empty, so a made-up email stops there. Real leads are then found or created in GHL through the v2 API using a Header Auth credential carrying the Private Integration Token plus the Version: 2021-07-28 header: the lead is looked up by email, then updated or created, tagged google-form-lead, with contact fields pulled from two sources (email, phone, and message from the form; name, job title, company, and LinkedIn from enrich.so) and the custom fields set by their field ids. Finally an HTTP Request creates one opportunity per contact in the Outside Leads pipeline at the New Lead stage, carrying the company name on the opportunity.',
+      result:
+        'Submitting a made-up lead (sam@notarealcompany123.com) returns nothing from enrich.so and the gate stops it, *proving the gate works*. Submitting Patrick (patrick@stripe.com) and Dylan (dylan@figma.com) *creates both in GHL Contacts*, tagged google-form-lead, each carrying their words in Lead message and their enriched Job title and LinkedIn, with two cards sitting in *New Lead on the Outside Leads pipeline*, each carrying the company. Field sources were *verified node by node*, so contact fields point at the form and enrichment fields point at enrich.so.',
+      img: '/images/automations/n8n/outside-leads-leads-in.png',
+    },
+    {
+      file: 'Outside Leads - Signals Out',
+      title: 'Outside Leads - Signals Out',
+      desc: 'One hot-lead tag in GHL fans out at once to a Google Sheets log row and a Discord alert.',
+      detail:
+        'This workflow rebuilds the Day-2 Signals Out fan-out in n8n. A Webhook node (POST) receives a call from a GHL workflow whenever a contact gets the hot-lead tag, sending the contact\'s name and email. Since n8n has no Router, the single webhook output is wired to two nodes at once: a Google Sheets Append Row node logs a row to the Lead Alert Log sheet (Name, Email, and Date set to the current time), and a Discord node posts an alert via webhook reading "Hot lead: <name> (<email>). Call them now." The mapping was checked against the technical field names GHL actually sends (often full_name and email).',
+      result:
+        'After publishing the workflow to activate the Webhook\'s Production URL and wiring a GHL workflow (trigger Contact Tag, action Webhook POST) to that URL, adding the hot-lead tag to Dylan produced *two results within seconds* from one event: *a row landed in the Lead Alert Log sheet* and *the alert posted in the Discord channel*. *One tag, two results*, confirming the fan-out.',
+      img: '/images/automations/n8n/outside-leads-signals-out.png',
+    },
+    {
+      file: 'Outside Leads - AI Round Trip',
+      title: 'Outside Leads - AI Round Trip',
+      desc: 'A hot-lead message goes to kie.ai for a HOT or COLD verdict, written back onto the contact as a GHL note.',
+      detail:
+        'This workflow rebuilds the Day-2 AI Round Trip in n8n. A Webhook node (POST) receives a call from a GHL workflow when a contact gets the ai-qualify tag, sending the contact\'s id and its Lead message. An HTTP Request node sends the message to kie.ai (authenticated with a Bearer-token credential), prompting the model to answer with one word, HOT or COLD, plus a short reason. Because kie.ai replies with a text/event-stream content type, the node\'s response format is set to JSON and the verdict reads at output[0].content[0].text. A second HTTP Request writes the verdict back to the contact as a note through GHL\'s v2 notes endpoint, using the Header Auth PIT credential and the Version: 2021-07-28 header, with body text "AI says: " plus the verdict (a custom-field PUT is the fallback if the notes endpoint gives trouble).',
+      result:
+        'After publishing the workflow and wiring a GHL workflow on the ai-qualify tag that POSTs the contact id and Lead message to the Production URL, tagging Dylan produced *a note reading "AI says: HOT, ..."* on his record *within seconds* (urgent: 20 units this quarter, call today), and tagging Patrick produced *a COLD verdict* ("maybe next year"). The kie.ai node\'s JSON response format and the output[0].content[0].text path were confirmed, and *the verdict was read in the run before being trusted*.',
+      img: '/images/automations/n8n/outside-leads-ai-round-trip.png',
+    },
+    {
+      file: 'Invoice Generator',
+      title: 'Invoice Generator',
+      desc: 'A form in, a branded PDF invoice out, emailed on its own by a serverless Trigger.dev task wired into n8n.',
+      detail:
+        'This build is a serverless invoice generator made of two parts working together. First, a Trigger.dev task takes invoice data as a payload (sender, receiver, invoice number, date, due date, tax rate, and an array of line items) and returns exactly two fields: base64 (the finished PDF as text) and fileName. Built with pdf-lib, it right-aligns all numbers, formats money as $1,200.00 with a dollar sign, commas, and two decimals, wraps long descriptions inside their column, and places subtotal, tax, and grand total in a totals box on the right with the grand total emphasized on a full US Letter page that adds a page if items overflow. Claude Code plans first (inputs, output, edge cases), waits for approval, builds, and runs it in the dev sandbox. Second, an n8n workflow named Invoice Generator turns it into a real tool: a short Form Trigger collects Client name, Client email, and Line items pasted as CSV; a Code node parses each line into a line_items array (quantity and unit_price are the last two comma values, description is everything before); the rest of the payload is filled automatically. An HTTP Request POSTs to the Trigger.dev api/v1 trigger endpoint with a Bearer secret-key credential and gets back a run id, a Wait node pauses about 8 seconds, then an HTTP Request GETs the api/v3 run and reads output.base64 once status is COMPLETED. A Convert to File node turns the base64 back into a binary PDF, and a Gmail node emails it to the client with the PDF attached. The task is then deployed to the Trigger.dev cloud and n8n is switched to the production secret key so it runs with the laptop closed.',
+      result:
+        'Claude Code planned the task, built it with pdf-lib, and ran it in the dev sandbox, then produced a *clean invoice PDF* from the sample payload with right-aligned formatted money, the long description wrapped inside its column, a correct totals box with the grand total emphasized, and *math that added up* when checked by hand. Wired into n8n, submitting the New Invoice form (Client name, Client email set to my own address, and four CSV line items) *sent an email within seconds* carrying the branded PDF invoice with all four line items, the tax, and the totals, built by the serverless task from what was typed. After running npx trigger.dev@latest deploy and swapping the n8n Bearer credential from the dev key to the production key, the form was submitted again with the dev terminal closed and *the invoice email still went out*, because the task now *runs in Trigger.dev\'s cloud*. The result is the full pattern: *a real form trigger in, a finished PDF out*, emailed on its own, running serverless in the cloud.',
+      img: '/images/automations/n8n/invoice-generator.png',
+      wide: true, // wide horizontal pipeline: show it as a full-row featured card
+    },
+    {
+      file: 'Invoice Engine',
+      title: 'Invoice Engine',
+      desc: 'A CRM card moved to Invoiced fires n8n to build the PDF via Trigger.dev, email it, and mark the contact invoiced, all hands free.',
+      detail:
+        'This project is a CRM-triggered invoice automation built in n8n that calls the Trigger.dev invoice task to produce the PDF. It runs on a GoHighLevel pipeline named Aging with five stages in order (Not Yet Invoiced, Invoiced, Less Than 30 Days, Past Due, Paid) and four contact custom fields (Invoice date, Customer ID, Invoice sent, Total invoice). The automation fires only when a card moves into the Invoiced stage. On that stage change, a GHL workflow POSTs the contact id to an n8n Webhook node; n8n gets the contact and reads its Customer ID and email, then pulls that customer\'s line items from a master Google Sheet filtered by Customer ID (trimming spaces on both sides so a stray space never turns C-003 into a no-match). It shapes those rows into the payload the task expects, calls the Trigger.dev task (POST to api/v1 to start, get a run id, wait, then GET api/v3 to read output.base64 and output.total once status is COMPLETED), turns the base64 into a binary PDF, and emails it to the customer with Gmail. Finally it writes back to the contact with the HighLevel update node: Invoice date = today, Invoice sent = ticked, Total invoice = output.total. The task itself is reused from the earlier build, upgraded to return output.total (line items plus tax) alongside output.base64 and to carry a branded header, and is hardened against every edge case (no line items, zero total, missing Customer ID, wrong date format, empty pipeline) with fake data before any real run. The whole thing is planned first, built in milestones, and validated at each step, with the write-back tested only on seed contacts.',
+      result:
+        'The data was set up first: the Aging pipeline with all five stages, the four custom fields, the six seed contacts each with a card in the right stage and a real testable email on Aria Bennett, and the master line-items sheet keyed by Customer ID (with C-002 and C-006 intentionally left out). The reused task was confirmed in dev to return a correct, branded PDF with output.base64 and output.total, verified by adding the line items by hand, and it *survived every edge case*: no line items returned a safe result instead of a crash, a zero total read 0, a missing Customer ID was flagged rather than sending a blank invoice, and a wrong date format still produced the PDF. In n8n, filtering by Customer ID returned only C-003\'s rows for C-003 and handled an empty result cleanly. On the full run, moving Aria Bennett\'s (C-001) card from Not Yet Invoiced into Invoiced fired the workflow: *within seconds* the *branded PDF invoice arrived in her inbox* with the correct line items and total, and her contact showed *Invoice date set to today, Invoice sent ticked, and Total invoice filled* with the tax-inclusive total. *One button push* (a card move) produced a finished invoice out and a "done" light on in the CRM, with *no hand-typing*.',
+      img: '/images/automations/n8n/invoice-engine.png',
+      wide: true, // wide horizontal pipeline: show it as a full-row featured card
+    },
+    {
+      file: 'Monthly Aging Report',
+      title: 'Monthly Aging Report',
+      desc: 'A scheduled n8n workflow that emails the owner a monthly accounts-receivable aging report as an Excel file, no button pressed.',
+      detail:
+        'This project is a scheduled n8n workflow that emails the owner a monthly accounts-receivable aging report, built on the same Aging pipeline reused from the Invoice Engine (no new board). Once a month, with nobody pressing a button, n8n searches every opportunity on the Aging pipeline with the GoHighLevel node to read each card\'s stage, adds a Get Contact step to read the linked contact\'s Invoice date and Total invoice, and gathers all cards into one rows array. It sends that array to a Trigger.dev task shaped { "payload": { "rows": [ ... ] } } so the live array travels intact. The task, built with SheetJS, groups the contacts by stage, works out days outstanding for each (today minus Invoice date), totals the money per stage plus a grand total, and returns a real .xlsx as base64 under output.base64 with no file storage. Calling it is three steps: an HTTP POST to the api/v1 trigger endpoint that returns a run id, a Wait of a few seconds, and an HTTP GET to the api/v3 run that reads output.base64 only once status is COMPLETED. n8n then turns the base64 into the .xlsx and emails the file named aging-report.xlsx to the owner. It uses the production secret key from the start, because an unattended monthly run cannot depend on a dev terminal being open. The task is planned first and hardened against every edge case (empty pipeline, missing Invoice date, zero total, an empty stage, and the exact 10-day date-math check) with fake data before going live.',
+      result:
+        'The Aging pipeline and seed contacts were reused as-is, with a couple of Invoiced cards moved into Less Than 30 Days and Past Due so the report had range to show. The task was validated in dev from the Trigger.dev Test page against a hand-made sample array (Priya Nair about 10 days out, Tom Becker about 20, Lena Fischer about 45), and the opened .xlsx checked by hand for correct stage groups, days outstanding, and per-stage totals. It then *survived every edge case*: an empty array returned a valid, openable but empty file instead of crashing, a missing Invoice date left days outstanding blank, a zero total counted as 0 without breaking the sum, an empty stage was handled cleanly, and an invoice dated exactly 10 days ago read 10, not 9 or 11. In n8n, the card count in the aggregated array *matched the cards on the board*. Wired end to end with the production key, a manual test run of the scheduled workflow *emailed a spreadsheet that opened correctly*, and set next to the live Aging board it was *a true picture*: no client missing, every stage, total, and days-outstanding value matching. The result is *a hands-off monthly report* that surfaces exactly who owes money and how late they are, *arriving in the owner\'s inbox on its own*.',
+      img: '/images/automations/n8n/monthly-aging-report.png',
+      wide: true, // wide horizontal pipeline: show it as a full-row featured card
     },
   ],
   make: [
     {
-      file: 'form-to-sheet.scenario',
+      file: 'Form to Sheet Sync',
       title: 'Form to sheet sync',
-      desc: 'Form submissions are cleaned and appended to a spreadsheet, with the team notified on each new row.',
-      img: null,
+      desc: 'Form entries are cleaned and appended to a spreadsheet, with a team ping.',
+      detail: 'Form submissions are cleaned and appended to a spreadsheet, with the team notified on each new row.',
+      img: null, // e.g. '/images/automations/make/form-to-sheet.png'
     },
   ],
   ghl: [
     {
-      file: 'new-lead-nurture',
+      file: 'New Lead Nurture',
       title: 'New lead nurture',
-      desc: 'New contacts drop into a follow-up sequence with tasks and reminders, so no lead goes cold.',
-      img: null,
+      desc: 'New contacts drop into a follow-up sequence so no lead goes cold.',
+      detail: 'New contacts drop into a follow-up sequence with tasks and reminders, so no lead goes cold.',
+      img: null, // e.g. '/images/automations/gohighlevel/new-lead-nurture.png'
     },
   ],
 }
@@ -822,7 +914,7 @@ function PlatformFrame({ meta, file, img, alt }) {
       <div className="wf__bar">
         <span className="wf__lights" aria-hidden="true"><i /><i /><i /></span>
         <span className="wf__barname">{file}</span>
-        <span className="wf__brand" aria-hidden="true">{meta.name}</span>
+        <span className="wf__brand" aria-hidden="true">{platformLogo(meta)}</span>
       </div>
       {img && ok ? (
         <div className="wf__shot">
@@ -862,10 +954,74 @@ function AutomationsIndex() {
   )
 }
 
-/* per-platform library — a grid of automations, each a screenshot + write-up */
+/* renders text with *asterisk-wrapped* words highlighted */
+function fmt(text) {
+  if (!text) return null
+  return text.split(/(\*[^*]+\*)/g).map((part, i) =>
+    part.length > 2 && part.startsWith('*') && part.endsWith('*')
+      ? <mark className="hl" key={i}>{part.slice(1, -1)}</mark>
+      : part,
+  )
+}
+
+/* modal: full write-up on the left, screenshot on the right */
+function AutomationModal({ item, meta, onClose }) {
+  const reduce = useReducedMotion()
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+  return (
+    <motion.div
+      className="amodal"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={item.title}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+    >
+      <motion.div
+        className="amodal__panel"
+        onClick={(e) => e.stopPropagation()}
+        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 22, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={reduce ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.985 }}
+        transition={{ duration: 0.32, ease: EASE }}
+      >
+        <button className="amodal__close" onClick={onClose} aria-label="Close">✕</button>
+        <div className="amodal__grid">
+          <span className="eyebrow eyebrow--muted">{meta.name} automation</span>
+          <h3 className="amodal__title">{item.title}</h3>
+          <div className="amodal__media">
+            <PlatformFrame meta={meta} file={item.file} img={item.img} alt={`${item.title} in ${meta.name}`} />
+          </div>
+          <span className="amodal__sub">Description</span>
+          <p className="amodal__text">{fmt(item.detail || item.desc)}</p>
+          {item.result && (
+            <>
+              <span className="amodal__sub">Result</span>
+              <p className="amodal__text">{fmt(item.result)}</p>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+/* per-platform library — a grid of automations; click one for the full write-up */
 function PlatformLibrary({ slug }) {
   const meta = PLATFORMS.find((p) => p.slug === slug)
   const items = LIBRARY[slug] || []
+  const [open, setOpen] = useState(null)
   return (
     <>
       <Reveal>
@@ -875,16 +1031,19 @@ function PlatformLibrary({ slug }) {
             <span className="eyebrow">Automation library</span>
             <h2 className="h2 sec-head__title">{meta.name} automations.</h2>
           </div>
-          <p className="lead">{meta.sub}. The flows I&apos;ve built on {meta.name}, with a short write-up on each.</p>
+          <p className="lead">{meta.sub}. The flows I&apos;ve built on {meta.name}. Open one for the full write-up.</p>
         </div>
       </Reveal>
       {items.length ? (
         <div className="libgrid">
           {items.map((it, i) => (
-            <Reveal key={it.file} className="libcard" delay={i * 0.05}>
-              <PlatformFrame meta={meta} file={it.file} img={it.img} alt={`${it.title} in ${meta.name}`} />
-              <h3 className="libcard__title">{it.title}</h3>
-              <p className="libcard__desc">{it.desc}</p>
+            <Reveal key={it.file} className={it.wide ? 'libgrid__wide' : undefined} delay={i * 0.05}>
+              <button type="button" className="libcard" onClick={() => setOpen(it)}>
+                <PlatformFrame meta={meta} file={it.file} img={it.img} alt={`${it.title} in ${meta.name}`} />
+                <h3 className="libcard__title">{it.title}</h3>
+                <p className="libcard__desc">{it.desc}</p>
+                <span className="libcard__more" aria-hidden="true">View details →</span>
+              </button>
             </Reveal>
           ))}
         </div>
@@ -894,6 +1053,10 @@ function PlatformLibrary({ slug }) {
           <p className="lib-empty__note">Automations coming soon.</p>
         </Reveal>
       )}
+
+      <AnimatePresence>
+        {open && <AutomationModal key="amodal" item={open} meta={meta} onClose={() => setOpen(null)} />}
+      </AnimatePresence>
     </>
   )
 }
@@ -916,7 +1079,7 @@ function Automation() {
         <div className="autoflows">
           <Reveal className="autoflow">
             <div className="autoflow__media">
-              <ShotFrame file="lead-qualification.flow" img={null} alt="Example n8n workflow" />
+              <ShotFrame file="Lead Qualification" img={null} alt="Example n8n workflow" />
             </div>
             <div className="autoflow__body">
               <span className="eyebrow eyebrow--muted">Live example</span>
