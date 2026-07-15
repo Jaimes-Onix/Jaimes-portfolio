@@ -16,6 +16,7 @@ const GREETING =
 
 const SUGGESTIONS = [
   'What does Jaimes do?',
+  'See his automations',
   'Take me to his projects',
   'How was this site built?',
   'Is he open to work?',
@@ -32,12 +33,16 @@ const SECTION_TARGETS = {
   stack: 'stack', techstack: 'stack', tech: 'stack', technologies: 'stack',
   experience: 'experience', work_history: 'experience',
   education: 'education', certificates: 'education', certs: 'education', school: 'education',
+  // automations area — a separate page (hash route), not a scroll target
+  automations: '#/automations', automation: '#/automations', workflow: '#/automations',
+  workflows: '#/automations', automate: '#/automations',
   resume: '.footer', cv: '.footer', download: '.footer', footer: '.footer', contact: '.footer',
 }
 /* friendly button labels keyed by resolved target */
 const TARGET_LABELS = {
   top: 'Top', about: 'About', work: 'Work', skills: 'Skills',
   stack: 'Tech Stack', experience: 'Experience', education: 'Education',
+  '#/automations': 'Automations',
   '.footer': 'Résumé',
 }
 const GOTO_RE = /\[\[\s*goto\s*:\s*([a-z\s_-]+?)\s*\]\]/i
@@ -216,9 +221,17 @@ export default function ChatBot() {
     [messages, loading],
   )
 
-  // tapping a "Go to …" button scrolls there (and closes the panel on mobile)
+  // tapping a "Go to …" button scrolls there (or navigates, for the automations page)
   const handleGoto = useCallback(
     (target) => {
+      if (!target) return
+      // route targets (a separate page, e.g. '#/automations') navigate via the hash router
+      if (target.startsWith('#/')) {
+        setOpen(false)
+        if (window.location.hash !== target) window.location.hash = target.slice(1)
+        else window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+        return
+      }
       const narrow = window.matchMedia('(max-width: 640px)').matches
       if (narrow) setOpen(false)
       setTimeout(() => scrollToTarget(target, reduce), narrow ? 320 : 40)
