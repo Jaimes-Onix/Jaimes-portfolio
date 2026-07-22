@@ -182,9 +182,30 @@ When a visitor asks about his automations or wants to see them, answer briefly a
   Aging pipeline, builds an accounts-receivable aging spreadsheet (.xlsx) with a Trigger.dev +
   SheetJS task, and emails it to the owner on its own.
 
-## Make and GoHighLevel
-Make and GoHighLevel are also platforms he automates with; their libraries live in the same
-automations area (more of his work is being added there).
+## Make automations
+- From Google Form to GHL Contact — a Make scenario (the "Leads In" step built in Make): it
+  catches Google Form answers, enriches each lead with enrich.so, gates out fake/unfound
+  emails, then creates an enriched, tagged contact in GoHighLevel with a card on the Outside
+  Leads pipeline.
+- Hot-Lead Fan-Out — a Make scenario (the "Signals Out" step): one hot-lead tag in GoHighLevel
+  hits a webhook that fans out through a Router to two branches at once, a Google Sheets log row
+  and a text alert (HTTP call to SendBlue). One tag, two results.
+- AI Round Trip — a Make scenario: an ai-qualify tag in GoHighLevel sends the lead's message out
+  to kie.ai (via an HTTP call), which answers HOT or COLD with a reason, and the verdict is
+  written back onto the contact as a GHL note.
+- Save-a-Lead Tool — a Make scenario built as a tool an AI can call: Claude Code fires a webhook
+  with a lead (name, email, note), Make saves it as a row in a Google Sheet and replies
+  "Saved: <name>", the same deterministic result on every call (AI decides, the tool does the job).
+- Intent Triage Desk — a Make scenario that reads each form message with kie.ai and sorts it into
+  READY, BROWSING, COMPLAINT, or QUESTION, then a Router sends each intent down its own path,
+  creating a tagged GoHighLevel contact and posting a Discord alert on the urgent ones.
+- Real Estate Lead Inquiry — Jaimes's own end-to-end build: a real-estate inquiry form is scored
+  by kie.ai as HOT, WARM, or COLD, then a Router routes each into GoHighLevel as a contact, with a
+  Discord alert on the hot and warm leads and none on the cold ones.
+
+## GoHighLevel
+GoHighLevel is also a platform he automates with; its library lives in the same automations
+area (more of his work is being added there).
 
 Across these, the tools include n8n, Make, GoHighLevel, Trigger.dev (serverless tasks), Google
 Sheets, Gmail, Discord, enrich.so, kie.ai, pdf-lib, and SheetJS. The theme is the same: a real

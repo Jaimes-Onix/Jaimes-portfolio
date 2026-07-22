@@ -858,7 +858,6 @@ const LIBRARY = {
       result:
         'Claude Code planned the task, built it with pdf-lib, and ran it in the dev sandbox, then produced a *clean invoice PDF* from the sample payload with right-aligned formatted money, the long description wrapped inside its column, a correct totals box with the grand total emphasized, and *math that added up* when checked by hand. Wired into n8n, submitting the New Invoice form (Client name, Client email set to my own address, and four CSV line items) *sent an email within seconds* carrying the branded PDF invoice with all four line items, the tax, and the totals, built by the serverless task from what was typed. After running npx trigger.dev@latest deploy and swapping the n8n Bearer credential from the dev key to the production key, the form was submitted again with the dev terminal closed and *the invoice email still went out*, because the task now *runs in Trigger.dev\'s cloud*. The result is the full pattern: *a real form trigger in, a finished PDF out*, emailed on its own, running serverless in the cloud.',
       img: '/images/automations/n8n/invoice-generator.png',
-      wide: true, // wide horizontal pipeline: show it as a full-row featured card
     },
     {
       file: 'Invoice Engine',
@@ -869,7 +868,6 @@ const LIBRARY = {
       result:
         'The data was set up first: the Aging pipeline with all five stages, the four custom fields, the six seed contacts each with a card in the right stage and a real testable email on Aria Bennett, and the master line-items sheet keyed by Customer ID (with C-002 and C-006 intentionally left out). The reused task was confirmed in dev to return a correct, branded PDF with output.base64 and output.total, verified by adding the line items by hand, and it *survived every edge case*: no line items returned a safe result instead of a crash, a zero total read 0, a missing Customer ID was flagged rather than sending a blank invoice, and a wrong date format still produced the PDF. In n8n, filtering by Customer ID returned only C-003\'s rows for C-003 and handled an empty result cleanly. On the full run, moving Aria Bennett\'s (C-001) card from Not Yet Invoiced into Invoiced fired the workflow: *within seconds* the *branded PDF invoice arrived in her inbox* with the correct line items and total, and her contact showed *Invoice date set to today, Invoice sent ticked, and Total invoice filled* with the tax-inclusive total. *One button push* (a card move) produced a finished invoice out and a "done" light on in the CRM, with *no hand-typing*.',
       img: '/images/automations/n8n/invoice-engine.png',
-      wide: true, // wide horizontal pipeline: show it as a full-row featured card
     },
     {
       file: 'Monthly Aging Report',
@@ -880,16 +878,68 @@ const LIBRARY = {
       result:
         'The Aging pipeline and seed contacts were reused as-is, with a couple of Invoiced cards moved into Less Than 30 Days and Past Due so the report had range to show. The task was validated in dev from the Trigger.dev Test page against a hand-made sample array (Priya Nair about 10 days out, Tom Becker about 20, Lena Fischer about 45), and the opened .xlsx checked by hand for correct stage groups, days outstanding, and per-stage totals. It then *survived every edge case*: an empty array returned a valid, openable but empty file instead of crashing, a missing Invoice date left days outstanding blank, a zero total counted as 0 without breaking the sum, an empty stage was handled cleanly, and an invoice dated exactly 10 days ago read 10, not 9 or 11. In n8n, the card count in the aggregated array *matched the cards on the board*. Wired end to end with the production key, a manual test run of the scheduled workflow *emailed a spreadsheet that opened correctly*, and set next to the live Aging board it was *a true picture*: no client missing, every stage, total, and days-outstanding value matching. The result is *a hands-off monthly report* that surfaces exactly who owes money and how late they are, *arriving in the owner\'s inbox on its own*.',
       img: '/images/automations/n8n/monthly-aging-report.png',
-      wide: true, // wide horizontal pipeline: show it as a full-row featured card
     },
   ],
   make: [
     {
-      file: 'Form to Sheet Sync',
-      title: 'Form to sheet sync',
-      desc: 'Form entries are cleaned and appended to a spreadsheet, with a team ping.',
-      detail: 'Form submissions are cleaned and appended to a spreadsheet, with the team notified on each new row.',
-      img: null, // e.g. '/images/automations/make/form-to-sheet.png'
+      file: 'From Google Form to GHL Contact',
+      title: 'From Google Form to GHL Contact',
+      desc: 'The Leads In step as a Make scenario: a Google Form answer is enriched by enrich.so, gated for real people, then created in GoHighLevel with a pipeline card.',
+      detail:
+        'This is a Make scenario that carries Google Form answers into GoHighLevel as enriched, tagged contacts with cards on the Outside Leads pipeline. It runs as one straight path: catch, enrich, gate, deliver. A Google Forms Watch Responses trigger catches each answer from the "Make Course Leads" form (Name, Email, Phone, Message). An HTTP "Make a request" module then enriches the lead: it POSTs to enrich.so (URL https://dev.enrich.so/api/v3/reverse-lookup/lookup) with the x-api-key header and a JSON body of {"email": "the form\'s email value"}, with Parse response on, and gets back the lead\'s firstName, lastName, headline (job title), companyName, profileUrl (LinkedIn), and displayName. A filter named Person found sits on the line into the next module and passes only leads whose Data, data, displayName exists, so a made-up email that returns nothing is stopped quietly. Leads that pass reach a Create a Contact module tagged google-form-lead, where Email and Phone are mapped from the form answers, First Name, Last Name, and Company Name from the enrichment, and the custom fields Lead message (the form\'s Message), Job title (headline), and LinkedIn (profileUrl) are filled. Finally a Create an Opportunity module places a card in the New Lead stage of the Outside Leads pipeline, linked by the Contact ID from the previous module. Patrick and Dylan are given different phone numbers so GHL does not reject the second as a phone duplicate, and the scenario is left OFF so a polling trigger does not burn operations.',
+      result:
+        'The gate worked as designed: the made-up test lead (sam tester at sam@notarealcompany123.com) came back with no displayName and the Person found filter stopped it before GHL. Submitting the two real leads on the live form link *returned a Status 200 with real facts* in the same run: Patrick Collison (patrick@stripe.com, cold) and Dylan Field (dylan@figma.com, hot) each came back with a first name, last name, job title, company, and LinkedIn URL, *the filter passed both*, and the delivery modules handled the found leads. In GHL Contacts, both appeared as *new contacts tagged google-form-lead*, each carrying their own words in Lead message and the enriched Company Name, Job title, and LinkedIn that were never on the form, and *two cards sat in the New Lead stage of Outside Leads*. The two leads were given different phone numbers so neither was blocked as a duplicate, the scenario\'s ON/OFF switch was left OFF, and both contacts were *kept in GHL as the data for the Signals Out and AI Round Trip modules*.',
+      img: '/images/automations/make/from-google-form-to-ghl-contact.png',
+    },
+    {
+      file: 'Hot-Lead Fan-Out',
+      title: 'Hot-Lead Fan-Out',
+      desc: 'The Signals Out step as a Make scenario: one hot-lead tag in GHL hits a webhook that fans out through a Router to a Google Sheets log row and a text alert at once.',
+      detail:
+        'This is a Make scenario that turns one GoHighLevel tag into two actions at the same time, the Signals Out fan-out. A Hot Lead Alert workflow in GHL fires when a contact gets the hot-lead tag and POSTs to a Make Custom webhook named GHL Lead Alert. That single webhook output feeds a Router, and the Router splits into two branches that each run on the same data. Branch 1 is a Google Sheets Add a Row module that writes the lead to the Lead Alert Log sheet, mapping the GHL fields (full_name into Name, email into Email, and the current time into Date). Branch 2 is an HTTP Make a request module that POSTs to SendBlue at api/send-message with the sb-api-key-id and sb-api-secret-key headers and a JSON body reading "Hot lead: [name] ([email]). Call them now.", texting a verified phone. The webhook is taught its fields by catching one request before the Router is added, the message goes to a number set inside the scenario rather than the lead\'s live phone during testing, and the scenario is left ON because a webhook costs operations only when it actually fires.',
+      result:
+        'With the Hot Lead Alert workflow saved and published, tagging Patrick first taught the webhook its fields from one event, even though he is the cold lead and the alert branch was not built yet. Once the Router and both branches were wired, tagging Dylan (the hot lead whose message said "call me today") fired the full fan-out and *both branches lit up at once*. *A new row landed in the Lead Alert Log sheet* within seconds with his name, email, and the date, and *the text alert arrived on the phone* (the SendBlue HTTP reply showed status QUEUED). *One tag, two results*: a log row and an alert, from a single ring of the doorbell. The scenario was left ON, because a webhook only spends operations when someone actually rings it.',
+      img: '/images/automations/make/hot-lead-fan-out.png',
+    },
+    {
+      file: 'AI Round Trip',
+      title: 'AI Round Trip',
+      desc: 'The AI Round Trip as a Make scenario: an ai-qualify tag sends the lead\'s message to kie.ai for a HOT or COLD verdict, written back onto the contact as a GHL note.',
+      detail:
+        'This is a Make scenario that sends a lead\'s own words out to an AI and brings the verdict back onto the contact, the AI Round Trip. In GHL, an AI Qualify Round Trip workflow fires when a contact gets the ai-qualify tag and POSTs to a Make Custom webhook named AI Round Trip. An HTTP Make a request module then calls kie.ai (POST to api.kie.ai/codex/v1/responses) with No authentication and a single Authorization header carrying the Bearer key; the JSON body sends a system rule (answer with one word, HOT or COLD, then one short reason) plus the lead\'s Lead message dragged in as a pill, with Parse response on. Because kie.ai returns its answer as text, a Parse JSON module reads the HTTP module\'s Data field so the verdict can be read at output, content, text. Finally a GoHighLevel Add a Note to the Contact module writes the verdict back, mapping the contact_id and a note reading "AI says: " plus the AI\'s answer. A guard treats anything that is not clearly HOT as not-hot, so a stray answer never trips the hot-lead alert.',
+      result:
+        'With Lead message already filled by the Leads In build (Patrick\'s said "maybe next year", Dylan\'s said "call me today"), the webhook was taught its fields by tagging Patrick first. Tagging Dylan then fired the full round trip: his words left GHL, kie.ai read them, and *the note "AI says: HOT, ..." landed on his record* within seconds with a one-sentence reason. Patrick, tagged the same way, came back *a COLD verdict*. The verdict was read in the run at output, content, text before it was trusted, *a not-HOT guard* kept a stray answer from ever firing the hot-lead alert, and the scenario was left ON. Wired to the Signals Out build, a HOT verdict can add the hot-lead tag and set off the fan-out, *two builds working together*.',
+      img: '/images/automations/make/ai-round-trip.png',
+    },
+    {
+      file: 'Save-a-Lead Tool',
+      title: 'Save-a-Lead Tool',
+      desc: 'A deterministic Make tool an AI can call: Claude Code fires a webhook with a lead and it saves the row to a Google Sheet and replies "Saved: [name]", the same way every time.',
+      detail:
+        'This is a Make scenario built as a tool that an AI can call, not a scenario that runs itself. Claude Code fires a webhook with a lead as JSON ({"name", "email", "note"}), and the scenario does one job the same way every time. A Custom webhook named Save a Lead receives the lead, a Google Sheets Add a Row module writes it to a Lead Inbox sheet (Name, Email, Note), and a Webhook response module replies with status 200 and the text "Saved: " plus the name pill (so it reads Saved: Ada Lovelace). The idea is determinism: an AI on its own is fuzzy and might reword or drop a field, but the tool stores exactly what it is sent, identically, on every call. The AI is the decider, the tool is the doer.',
+      result:
+        'Called from Claude Code with Ada Lovelace (ada@example.com, "wants a quote this week"), the tool returned *status 200* and the exact reply *"Saved: Ada Lovelace"*, and a new row landed in the Lead Inbox sheet. Run the same call three times and *the reply is identical every time*, with three matching rows, no reworded note and no dropped field. A second lead, Grace Hopper, came back "Saved: Grace Hopper" the same way. *Same input, same output, every time*: the AI decides when to save, and the tool saves it the same exact way.',
+      img: '/images/automations/make/save-a-lead-tool.png',
+    },
+    {
+      file: 'Intent Triage Desk',
+      title: 'Intent Triage Desk',
+      desc: 'The Day 2 capstone: a form message is read by kie.ai, sorted into READY, BROWSING, COMPLAINT, or QUESTION, then routed into GoHighLevel with the right tag and a Discord alert on the urgent ones.',
+      detail:
+        'This is the Intent Triage Desk, a Make scenario that reads each incoming lead and routes it by intent. A Google Forms Watch Responses trigger catches the form (Name, Email, Phone, Message). An HTTP Make a request module sends the message to kie.ai (POST to codex/v1/responses with a Bearer key) under a system rule that returns one word, READY, BROWSING, COMPLAINT, or QUESTION, plus a short reason. A Parse JSON module turns kie.ai\'s text answer into a readable verdict at output, content, text. A Router then splits into four paths, each with a filter on the verdict word: READY creates a GoHighLevel contact tagged triage-ready and posts a Discord alert; BROWSING just tags the contact triage-browsing (browsers are not urgent, so no alert); COMPLAINT tags triage-complaint and posts a Discord alert so it is caught fast; and QUESTION, a fourth path added beyond the brief, tags the contact and alerts too. One form in, the right CRM action out, every time. The AI does the reading and the Router does the sorting.',
+      result:
+        'Submitting the form with the test messages sorted each one correctly. Dylan\'s urgent request ("20 new units this quarter, call me today") came back *READY*, created a triage-ready contact, and *fired the alert*. Patrick\'s "just looking around" came back *BROWSING* and was tagged triage-browsing with no alert. Sam\'s "nothing arrived, I need help today" came back *COMPLAINT*, tagged triage-complaint, and alerted. Each lead landed on *the right path with the right tag*, the urgent ones reached the alert channel while browsers stayed quiet, and a fourth QUESTION path was added on top of the brief. One form in, the intent read and the right CRM action taken every time, with the scenario kept OFF until it was tested.',
+      img: '/images/automations/make/intent-triage-desk.png',
+    },
+    {
+      file: 'Real Estate Lead Inquiry',
+      title: 'Real Estate Lead Inquiry',
+      desc: 'My own build: a real-estate inquiry form is scored by AI as HOT, WARM, or COLD, then routed into GoHighLevel, with a Discord alert on the hot and warm ones.',
+      detail:
+        'This is my own build for a real-estate team: every inquiry that comes through the form gets read, scored, and routed on its own, so an agent never has to triage leads by hand. A Google Forms Watch Responses trigger catches the inquiry. An HTTP Make a request module sends the message to kie.ai (POST to codex/v1/responses with a Bearer key) under a system rule that scores the lead HOT, WARM, or COLD with a short reason. A Parse JSON module turns kie.ai\'s text answer into a readable verdict. A Router then splits into three paths, each filtered on the score: HOT creates a GoHighLevel contact and posts a Discord alert so the agent can call right away; WARM creates the contact and posts a Discord alert to follow up soon; and COLD just creates the contact for later nurture, with no alert. It reuses the building blocks from the rest of the day (the form trigger, the kie.ai call, Parse JSON, a Router, and Discord) and points them at one real problem: real-estate inquiries sorted by how ready the buyer is, the moment they arrive.',
+      result:
+        'Submitting a test inquiry runs the whole path in seconds: kie.ai scores the message, the Router reads the verdict, and the lead lands in GoHighLevel on the right path. *A HOT inquiry creates the contact and fires a Discord alert* so the agent calls while the buyer is still warm; *a WARM inquiry creates the contact and posts a follow-up alert*; and *a COLD inquiry just creates the contact* with no alert, kept for nurture. Run across the three score types, each one landed on *the right path every time*, so one form in gives the right CRM action and the right level of urgency without an agent reading a single message.',
+      img: '/images/automations/make/real-estate-lead-inquiry.png',
     },
   ],
   ghl: [
@@ -917,7 +967,7 @@ function PlatformFrame({ meta, file, img, alt }) {
         <span className="wf__brand" aria-hidden="true">{platformLogo(meta)}</span>
       </div>
       {img && ok ? (
-        <div className="wf__shot">
+        <div className={`wf__shot wf__shot--${meta.slug}`}>
           <img src={img} alt={alt} loading="lazy" onError={() => setOk(false)} />
         </div>
       ) : (

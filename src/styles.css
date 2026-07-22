@@ -2164,6 +2164,15 @@
   }
   .libcard:hover .libcard__more,
   .libcard:focus-visible .libcard__more { opacity: 1; transform: translateX(0); }
+  /* every card the same size — the thumbnail fills the box (full detail is in the popup) */
+  .libcard .wf__shot,
+  .libcard .wf__ph { aspect-ratio: 1.9; }
+  .libcard .wf__shot { overflow: hidden; }
+  /* show the whole workflow, centered; the bg matches each tool's canvas so there are no bars */
+  .libcard .wf__shot img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+  .wf__shot--n8n { background: #171717; }
+  .wf__shot--make { background: #f0f0f0; }
+  .wf__shot--ghl { background: #171717; }
 
   /* automation modal — description left, screenshot right */
   .amodal {
