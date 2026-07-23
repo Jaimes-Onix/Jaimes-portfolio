@@ -61,7 +61,7 @@ const PROJECTS = [
       'Shipped to a live route',
     ],
     href: 'https://tester-website-beige.vercel.app/product.html',
-    img: 'w-product',
+    img: 'w-product-2',
     alt: 'Smart Watch Pro product page',
   },
   {
@@ -78,7 +78,7 @@ const PROJECTS = [
       'Responsive showcase grid',
     ],
     href: 'https://tester-website-beige.vercel.app/TesterTech.html',
-    img: 'w-testertech',
+    img: 'w-testertech-2',
     alt: 'Tech smart-gadgets showcase',
   },
   {

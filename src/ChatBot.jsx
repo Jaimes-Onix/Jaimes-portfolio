@@ -33,9 +33,13 @@ const SECTION_TARGETS = {
   stack: 'stack', techstack: 'stack', tech: 'stack', technologies: 'stack',
   experience: 'experience', work_history: 'experience',
   education: 'education', certificates: 'education', certs: 'education', school: 'education',
-  // automations area — a separate page (hash route), not a scroll target
+  // automations area — separate pages (hash routes), not scroll targets.
+  // generic index, and per-platform pages when a specific tool is involved.
   automations: '#/automations', automation: '#/automations', workflow: '#/automations',
   workflows: '#/automations', automate: '#/automations',
+  n8n: '#/automations/n8n',
+  make: '#/automations/make',
+  gohighlevel: '#/automations/ghl', ghl: '#/automations/ghl', highlevel: '#/automations/ghl',
   resume: '.footer', cv: '.footer', download: '.footer', footer: '.footer', contact: '.footer',
 }
 /* friendly button labels keyed by resolved target */
@@ -43,13 +47,16 @@ const TARGET_LABELS = {
   top: 'Top', about: 'About', work: 'Work', skills: 'Skills',
   stack: 'Tech Stack', experience: 'Experience', education: 'Education',
   '#/automations': 'Automations',
+  '#/automations/n8n': 'n8n automations',
+  '#/automations/make': 'Make automations',
+  '#/automations/ghl': 'GoHighLevel automations',
   '.footer': 'Résumé',
 }
-const GOTO_RE = /\[\[\s*goto\s*:\s*([a-z\s_-]+?)\s*\]\]/i
+const GOTO_RE = /\[\[\s*goto\s*:\s*([a-z0-9\s_-]+?)\s*\]\]/i
 
-/* normalise a raw goto key → a resolved DOM target ('about' | '.footer' | null) */
+/* normalise a raw goto key → a resolved target (keeps digits so "n8n" survives) */
 function resolveTarget(key) {
-  const norm = String(key).toLowerCase().replace(/[^a-z]/g, '')
+  const norm = String(key).toLowerCase().replace(/[^a-z0-9]/g, '')
   return SECTION_TARGETS[norm] || null
 }
 
