@@ -12,7 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 const EASE = [0.22, 1, 0.36, 1]
 
 const GREETING =
-  "Hey! I'm Jaimes's assistant. Ask me anything about Jaimes — his work, skills, experience — or about this portfolio site itself."
+  "Hey! I'm Jaimes's assistant. Ask me anything about Jaimes: his work, skills, and experience, or about this portfolio site itself."
 
 const SUGGESTIONS = [
   'What does Jaimes do?',
@@ -112,11 +112,6 @@ function Message({ role, content, goto, onGoto }) {
   const isUser = role === 'user'
   return (
     <div className={`cb-msg ${isUser ? 'cb-msg--user' : 'cb-msg--bot'}`}>
-      {!isUser && (
-        <span className="cb-msg__avatar">
-          <BotFace w={28} />
-        </span>
-      )}
       <div className="cb-msg__col">
         <div className="cb-msg__bubble">{linkify(content)}</div>
         {!isUser && goto && (
@@ -207,7 +202,7 @@ export default function ChatBot() {
         const match = raw.match(GOTO_RE)
         const text =
           raw.replace(GOTO_RE, '').replace(/\n{3,}/g, '\n\n').trim() ||
-          'Sure — use the button below. 👇'
+          'Sure, use the button below. 👇'
         const goto = match ? resolveTarget(match[1]) : null
         setMessages((m) => [...m, { role: 'assistant', content: text, goto }])
       } catch (err) {
@@ -273,12 +268,12 @@ export default function ChatBot() {
             animate={reduce ? {} : { opacity: 1, scale: 1 }}
             exit={reduce ? {} : { opacity: 0, scale: 0.6 }}
             transition={{ duration: 0.3, ease: EASE }}
-            whileHover={reduce ? {} : { scale: 1.06 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={reduce ? {} : { y: -2 }}
+            whileTap={{ scale: 0.96 }}
             title="Ask about Jaimes"
           >
+            <BotFace w={22} />
             <span className="cb-launcher__label">Ask about me</span>
-            <BotFace w={58} />
           </motion.button>
         )}
       </AnimatePresence>
@@ -331,9 +326,6 @@ export default function ChatBot() {
 
               {loading && (
                 <div className="cb-msg cb-msg--bot">
-                  <span className="cb-msg__avatar">
-                    <BotFace w={28} />
-                  </span>
                   <div className="cb-msg__bubble cb-msg__bubble--typing" aria-label="Thinking">
                     <span className="cb-dot" />
                     <span className="cb-dot" />
@@ -367,7 +359,7 @@ export default function ChatBot() {
               </button>
             </form>
 
-            <p className="cb-foot">Ask about Jaimes &amp; this portfolio · powered by AI</p>
+            <p className="cb-foot">Responses are AI-generated</p>
           </motion.div>
         )}
       </AnimatePresence>
