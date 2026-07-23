@@ -591,7 +591,9 @@ function AboutIcon({ name }) {
   return <svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>
 }
 
-function About({ onResume }) {
+function About({ theme, onResume }) {
+  // dark photo for dark mode, light photo for light mode (falls back to dark if missing)
+  const workspace = theme === 'light' ? '/images/about-workspace-light.png' : '/images/about-workspace.png'
   return (
     <section id="about" className="section about2">
       <div className="wrap">
@@ -637,7 +639,12 @@ function About({ onResume }) {
           {/* RIGHT — image + stats + CTAs */}
           <Reveal className="about2__right" delay={0.08}>
             <div className="about2__photo">
-              <img src="/images/about-workspace.png" alt="Jaimes at a dual-monitor desk building websites and wiring up automation flows" loading="lazy" />
+              <img
+                src={workspace}
+                alt="Jaimes at a dual-monitor desk building websites and wiring up automation flows"
+                loading="lazy"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/about-workspace.png' }}
+              />
               <span className="about2__badge" aria-hidden="true">
                 <svg viewBox="0 0 100 100">
                   <defs><path id="aboutBadgePath" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0" /></defs>
@@ -1781,7 +1788,7 @@ function HomePage() {
       <TopBar active={active} theme={theme} onToggleTheme={toggleTheme} />
       <main>
         <Hero theme={theme} start={!intro} />
-        <About onResume={() => setResumeOpen(true)} />
+        <About theme={theme} onResume={() => setResumeOpen(true)} />
         <Work onSelect={setSelected} />
         <Skills />
         <Automation />
